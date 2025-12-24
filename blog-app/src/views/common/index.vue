@@ -74,7 +74,7 @@
       this.load()
     },
 	mounted(){
-		
+
 	},
     data() {
       return {
@@ -108,7 +108,7 @@
 		  getListArticleCount(this.$store.state.token).then(data => {
 			  this.ArticlesLength=data.data
 		  }).catch(error => {
-			  
+
 		  })
 		  },
       getArticles() {
@@ -125,7 +125,7 @@
         })
       },
 		handleSizeChange(val) {
-		  
+
 		  this.articles=[];
 		  //当改变就回到第一页查询
 		  this.innerPage.pageNumber=1;
@@ -134,9 +134,9 @@
 		  this.getArticles();
 		},
 		handleCurrentChange(val) {
-		  
+
 		  this.articles=[];
-		  
+
 		  this.innerPage.pageNumber=val;
 		  this.getArticles()
 		}
@@ -144,7 +144,10 @@
     components: {
       'article-item': ArticleItem,
     }
+
   }
+
+
 </script>
 
 <style>

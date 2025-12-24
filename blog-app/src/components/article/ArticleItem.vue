@@ -1,52 +1,42 @@
 <template>
-  <div class="comic-card-wrap">
+  <div class="diary-wrap">
     <div
-      class="comic-card"
-      :class="{ 'is-reverse': textalign(index) === 'right' }"
+      class="diary-card"
+      :class="[themeClass, textureClass, { 'is-reverse': textalign(index) === 'right' }]"
+      :style="{ transform: `rotate(${rotateDeg}deg)` }"
       @click="view(id)"
     >
 
-      <div class="comic-img-box">
-        <img :src="Imgview(index)" class="comic-cover" alt="cover">
-        <div class="img-mask">
-          <span class="mask-text">READ</span>
+      <div class="corner-doodle top-left"></div>
+      <div class="corner-doodle bottom-right"></div>
+
+      <div class="doodle-sticker">
+        <span class="sticker-prefix">No.</span>
+        <span class="sticker-num">{{ index + 1 < 10 ? '0' + (index + 1) : index + 1 }}</span>
+      </div>
+
+      <div class="diary-img-box">
+        <div class="polaroid-frame">
+          <img :src="Imgview(index)" class="diary-cover" alt="cover">
+          <div class="photo-pin-doodle"></div>
+        </div>
+        <div class="falling-decor">
+          <i></i><i></i><i></i>
         </div>
       </div>
 
-      <div class="comic-content">
-        <div class="bg-number">{{ index + 1 < 10 ? '0' + (index + 1) : index + 1 }}</div>
-
+      <div class="diary-content">
         <div class="meta-header">
-           <span class="date-tag">
-             <i class="el-icon-date"></i> {{ createDate }}
-           </span>
+          <span class="date-tag">📅 {{ createDate }}</span>
         </div>
-
-        <h3 class="comic-title">
-          <span class="hashtag">#</span> {{ title }}
-        </h3>
-
-        <div class="comic-summary">
-          {{ summary }}
-        </div>
-
-        <div class="comic-footer">
+        <h3 class="diary-title">{{ title }}</h3>
+        <div class="divider-hand-drawn">- - - - - - - ✂ - - - - - - -</div>
+        <div class="diary-summary">{{ summary }}</div>
+        <div class="diary-footer">
           <div class="tags-group">
-            <el-tag
-              v-for="tag in tags"
-              :key="tag.id"
-              size="mini"
-              type="info"
-              effect="plain"
-              class="comic-tag">
-              {{ tag.tagName }}
-            </el-tag>
+            <span v-for="tag in tags" :key="tag.id" class="marker-tag">#{{ tag.tagName }}</span>
           </div>
-
-          <div class="stats-group">
-            <span><i class="el-icon-view"></i> {{ viewCounts }}</span>
-            <span><i class="el-icon-chat-square"></i> {{ commentCounts }}</span>
-          </div>
+          <div class="stats-group"><span>♥ {{ viewCounts }} / {{ commentCounts }}</span></div>
         </div>
       </div>
 
@@ -60,225 +50,196 @@ import { formatTime } from "@/utils/time";
 export default {
   name: 'ArticleItem',
   props: {
-    id: String,
-    weight: Number,
-    title: String,
-    commentCounts: Number,
-    viewCounts: Number,
-    summary: String,
-    author: String,
-    tags: Array, // 接收标签数组
-    createDate: String,
-    cover: String,
-    index: Number,
+    id: String, weight: Number, title: String, commentCounts: Number, viewCounts: Number,
+    summary: String, author: String, tags: Array, createDate: String, cover: String, index: Number,
+  },
+  data() {
+    return {
+      themesConfig: [
+        { name: 'Sakura', class: 'theme-sakura', texture: 'texture-line' },
+        { name: 'Blue',   class: 'theme-blue',   texture: 'texture-grid' },
+        { name: 'Mint',   class: 'theme-mint',   texture: 'texture-dot' },
+        { name: 'Lemon',  class: 'theme-lemon',  texture: 'texture-grid' },
+        { name: 'Taro',   class: 'theme-taro',   texture: 'texture-line' },
+        { name: 'Cocoa',  class: 'theme-cocoa',  texture: 'texture-kraft' },
+        { name: 'Peach',  class: 'theme-peach',  texture: 'texture-dot' },
+        { name: 'Gray',   class: 'theme-gray',   texture: 'texture-grid' },
+        { name: 'Berry',  class: 'theme-berry',  texture: 'texture-line' },
+        { name: 'Soda',   class: 'theme-soda',   texture: 'texture-dot' }
+      ]
+    }
+  },
+  computed: {
+    currentThemeConfig() { return this.themesConfig[this.index % this.themesConfig.length]; },
+    themeClass() { return this.currentThemeConfig.class; },
+    textureClass() { return this.currentThemeConfig.texture; },
+    themeName() { return this.currentThemeConfig.name; },
+    rotateDeg() { return (this.index % 2 === 0 ? -1 : 1); }
   },
   methods: {
-    view(id) {
-      this.$router.push({ path: `/view/${id}` })
-    },
-    Imgview(index) {
-      // 随机二次元图，加 random 参数防止图片重复
-      return "https://www.loliapi.com/acg/?uuid=" + index
-    },
-    textalign(index) {
-      return index % 2 != 0 ? "right" : "left";
-    },
+    view(id) { this.$router.push({ path: `/view/${id}` }) },
+    Imgview(index) { return "https://www.loliapi.com/acg/?uuid=" + index },
+    textalign(index) { return index % 2 != 0 ? "right" : "left"; },
     formatTime
   }
 }
 </script>
 
 <style scoped>
-/* 容器边距 */
-.comic-card-wrap {
-  padding: 0 10px;
-  margin-bottom: 30px;
-}
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=M+PLUS+Rounded+1c:wght@400;700&display=swap');
 
-/* === 核心卡片设计 === */
-.comic-card {
-  position: relative;
-  display: flex;
-  height: 220px;
-  background: #fff;
-  border: 2px solid #333; /* 粗黑边框 */
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  overflow: hidden;
-  box-shadow: 6px 6px 0px rgba(50, 50, 50, 0.2); /* 实色阴影 */
-}
-
-/* 悬停动效 */
-.comic-card:hover {
-  transform: translate(-4px, -4px);
-  box-shadow: 10px 10px 0px #FF7F50; /* 悬停变橙色 */
-  border-color: #333;
-}
-
-/* === 1. 图片区 === */
-.comic-img-box {
-  width: 45%;
-  position: relative;
-  border-right: 2px solid #333; /* 电脑端：右侧分割线 */
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.comic-cover {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.comic-card:hover .comic-cover { transform: scale(1.1); }
-
-.img-mask {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.mask-text {
-  color: #fff; border: 2px solid #fff; padding: 5px 15px;
-  font-weight: 900; letter-spacing: 2px; transform: rotate(-5deg);
-}
-.comic-card:hover .img-mask { opacity: 1; }
-
-/* === 2. 内容区 === */
-.comic-content {
-  flex: 1;
-  padding: 15px 20px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  background-image: radial-gradient(#ddd 1px, transparent 1px);
-  background-size: 8px 8px;
-  overflow: hidden;
-}
-
-.bg-number {
-  position: absolute; right: 10px; top: -10px;
-  font-size: 5rem; font-weight: 900; color: rgba(0,0,0,0.04);
-  font-family: Impact, sans-serif; pointer-events: none;
-}
-
-.meta-header { margin-bottom: 5px; z-index: 1; }
-.date-tag {
-  background: #333; color: #fff; padding: 2px 6px;
-  font-size: 12px; border-radius: 4px; font-weight: bold;
-}
-
-.comic-title {
-  margin: 5px 0;
-  font-size: 1.3rem;
-  color: #333;
-  font-weight: 800;
-  z-index: 1;
-  transition: color 0.3s;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.hashtag { color: #FF7F50; margin-right: 5px; }
-.comic-card:hover .comic-title { color: #FF7F50; }
-
-.comic-summary {
-  font-size: 13px; color: #666; line-height: 1.6;
-  height: 42px; overflow: hidden;
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-  margin-bottom: auto; z-index: 1;
-}
-
-/* === 底部栏 (Tag + 统计) === */
-.comic-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 1;
-  border-top: 2px dashed #ccc; /* 虚线分割 */
-  padding-top: 8px;
-  margin-top: 8px;
-}
-
-/* ⭐ 标签样式自定义 ⭐ */
-.tags-group {
-  display: flex;
-  flex-wrap: wrap; /* 标签多了自动换行 */
-  gap: 5px; /* 标签间距 */
-  max-width: 70%; /* 防止挤压统计数据 */
-}
-
-/* 强制覆盖 el-tag 样式使其符合漫画风 */
-.comic-tag {
-  border-radius: 0 !important; /* 方形标签 */
-  border: 1px solid #333 !important;
-  color: #333 !important;
-  background: #fff !important;
-  font-weight: bold;
-}
-
-.stats-group {
-  font-size: 12px; color: #888; font-weight: 600;
-  flex-shrink: 0;
-}
-.stats-group span { margin-left: 10px; }
-
-/* === 电脑端：左右反转 (Zigzag) === */
-.is-reverse { flex-direction: row-reverse; }
-.is-reverse .comic-img-box {
-  border-right: none;
-  border-left: 2px solid #333; /* 分割线变到左边 */
-}
-.is-reverse .bg-number { right: auto; left: 10px; }
-
+.diary-wrap { padding: 20px; margin-bottom: 60px; }
 
 /* =========================================
-   📱 移动端响应式核心 (Max-width: 768px)
-   ========================================= */
-@media screen and (max-width: 768px) {
-  .comic-card-wrap {
-    padding: 0;
-  }
+   1. 核心卡片容器
+========================================= */
+.diary-card {
+  --bg-color: #fff; --border-color: #eee; --accent-color: #ccc; --tape-color: rgba(200,200,200,0.5); --line-color: rgba(0,0,0,0.05);
+  --falling-icon: none;
+  --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='30' fill='%23000'/%3E%3C/svg%3E");
 
-  /* 1. 强制变成上下结构 */
-  .comic-card,
-  .comic-card.is-reverse {
-    flex-direction: column !important;
-    height: auto; /* 高度自适应 */
-  }
-
-  /* 2. 图片在上面 */
-  .comic-img-box {
-    width: 100%;
-    height: 160px; /* 图片高度 */
-    border-right: none;
-    border-left: none;
-    /* ⭐ 核心：这就是你要的分割线 ⭐ */
-    border-bottom: 2px solid #333 !important;
-  }
-
-  /* 3. 清楚反转带来的副作用 */
-  .is-reverse .comic-img-box {
-    border-left: none;
-  }
-
-  /* 4. 内容区调整 */
-  .comic-content {
-    padding: 12px 15px;
-  }
-
-  .comic-title { font-size: 1.1rem; }
-  .bg-number { font-size: 4rem; top: 0; }
-
-  /* 5. 手机上标签只显示一行，多了隐藏 */
-  .tags-group {
-    max-width: 60%;
-    height: 24px;
-    overflow: hidden;
-  }
+  position: relative; display: flex; height: 260px;
+  background: var(--bg-color); border: 1px dashed var(--border-color); border-radius: 8px; cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05), 0 2px 5px var(--shadow-color), 0 0 0 1px #fff inset;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 1; overflow: hidden;
 }
+.diary-card:hover, .diary-card.is-reverse:hover {
+  transform: scale(1.02) translateY(-5px) !important; border-style: solid; border-color: var(--accent-color);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1), 0 5px 15px var(--shadow-color); z-index: 10;
+}
+
+/* =========================================
+   2. 装饰组件
+========================================= */
+.corner-doodle {
+  position: absolute; width: 80px; height: 80px;
+  background-color: var(--accent-color); opacity: 0.15; z-index: 0; pointer-events: none;
+  -webkit-mask-image: var(--doodle-mask); mask-image: var(--doodle-mask);
+  -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center;
+}
+.corner-doodle.top-left { top: -10px; left: -10px; transform: rotate(-15deg); }
+.corner-doodle.bottom-right { bottom: -10px; right: -10px; transform: rotate(165deg); }
+
+/* 主题图钉 */
+.photo-pin-doodle {
+  position: absolute; top: -12px; right: 15px; width: 35px; height: 35px;
+  background-color: var(--accent-color); opacity: 0.9; z-index: 15;
+  -webkit-mask-image: var(--doodle-mask); mask-image: var(--doodle-mask);
+  -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center;
+  transform: rotate(15deg); filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.2));
+}
+
+/* ⭐⭐⭐ 修改：序列号贴纸样式 ⭐⭐⭐ */
+.doodle-sticker {
+  position: absolute; top: 15px; left: 15px;
+  width: 50px; height: 50px;
+  background: #fff;
+  border-radius: 50%;
+  border: 2px solid var(--accent-color);
+  /* 阴影让它有点厚度，像贴上去的 */
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+
+  display: flex; flex-direction: column; /* 上下排列 */
+  align-items: center; justify-content: center;
+  transform: rotate(-15deg); z-index: 15;
+}
+
+.sticker-prefix {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 10px;
+  color: var(--accent-color);
+  line-height: 1;
+}
+
+.sticker-num {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--accent-color);
+  line-height: 1;
+}
+
+/* 拍立得照片 */
+.diary-img-box { width: 45%; position: relative; padding: 15px; display: flex; align-items: center; justify-content: center; }
+.polaroid-frame {
+  width: 90%; height: 95%; background: #fff; padding: 6px 6px 25px 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.5s ease; position: relative; z-index: 5;
+}
+.diary-card:hover .polaroid-frame { transform: scale(1.02); }
+.diary-cover { width: 100%; height: 100%; object-fit: cover; border: 1px solid #eee; }
+
+/* 内容排版 */
+.diary-content { flex: 1; padding: 20px 30px 15px 15px; display: flex; flex-direction: column; position: relative; z-index: 2; }
+.meta-header { margin-bottom: 5px; z-index: 1; }
+.date-tag { font-family: 'Patrick Hand', cursive; color: var(--accent-color); font-size: 13px; }
+.diary-title {
+  margin: 5px 0 10px 0; font-size: 1.4rem; color: #444; font-family: 'M PLUS Rounded 1c', sans-serif; font-weight: 700;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; z-index: 1; transition: color 0.3s;
+  background: linear-gradient(to bottom, transparent 60%, var(--border-color) 60%); display: inline;
+}
+.diary-card:hover .diary-title { color: var(--accent-color); }
+.divider-hand-drawn { font-family: 'Patrick Hand', cursive; color: var(--border-color); font-size: 12px; margin: 10px 0; opacity: 0.6; }
+.diary-summary {
+  font-size: 13px; color: #666; line-height: 1.7; font-family: 'Patrick Hand', cursive; height: 46px; overflow: hidden;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; margin-bottom: auto; z-index: 1;
+}
+.diary-footer { display: flex; justify-content: space-between; align-items: center; z-index: 1; margin-top: 10px; }
+.tags-group { display: flex; gap: 6px; }
+.marker-tag {
+  font-family: 'Patrick Hand', cursive; font-size: 12px; color: #fff; padding: 1px 8px; border-radius: 4px; background: var(--accent-color); opacity: 0.9;
+}
+.stats-group { font-family: 'Patrick Hand', cursive; font-size: 13px; color: var(--accent-color); }
+
+/* 反转布局 */
+.is-reverse { flex-direction: row-reverse; }
+.is-reverse .corner-doodle.top-left { left: auto; right: -10px; transform: rotate(15deg); }
+.is-reverse .corner-doodle.bottom-right { right: auto; left: -10px; transform: rotate(195deg); }
+.is-reverse .doodle-sticker { left: auto; right: 20px; transform: rotate(10deg); }
+.is-reverse .photo-pin-doodle { right: auto; left: 15px; transform: rotate(-15deg); }
+
+@media screen and (max-width: 768px) {
+  .diary-card { flex-direction: column !important; height: auto; }
+  .diary-img-box { width: 100%; padding: 15px 15px 5px 15px; }
+  .polaroid-frame { height: 160px; padding-bottom: 20px; }
+  .diary-content { padding: 15px 20px; }
+  .corner-doodle { opacity: 0.1; transform: scale(0.8); }
+  .doodle-sticker, .is-reverse .doodle-sticker { top: 10px; left: 15px; right: auto; transform: scale(0.8); }
+}
+
+/* =========================================
+   3. 纸张纹理
+========================================= */
+.texture-line .diary-content { background-image: repeating-linear-gradient(var(--bg-color), var(--bg-color) 24px, var(--line-color) 25px); background-attachment: local; }
+.texture-grid .diary-content { background-image: linear-gradient(var(--line-color) 1px, transparent 1px), linear-gradient(90deg, var(--line-color) 1px, transparent 1px); background-size: 15px 15px; }
+.texture-dot .diary-content { background-image: radial-gradient(var(--line-color) 1.5px, transparent 1.5px); background-size: 15px 15px; }
+.texture-kraft .diary-content { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E"); }
+
+/* =========================================
+   4. 飘落动画
+========================================= */
+.falling-decor { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 20; }
+.falling-decor i {
+  position: absolute; top: -30px; width: 20px; height: 20px; display: block;
+  background-image: var(--falling-icon); background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0;
+}
+.diary-card:hover .falling-decor i:nth-child(1) { left: 15%; animation: fall 3s infinite linear; }
+.diary-card:hover .falling-decor i:nth-child(2) { left: 50%; animation: fall 4s infinite linear 0.5s; width: 14px; height: 14px; }
+.diary-card:hover .falling-decor i:nth-child(3) { left: 80%; animation: fall 3.5s infinite linear 1.5s; width: 18px; height: 18px; }
+@keyframes fall {
+  0% { top: -30px; opacity: 0; transform: rotate(0deg); } 20% { opacity: 0.9; } 80% { opacity: 0.9; } 100% { top: 100%; opacity: 0; transform: rotate(360deg); }
+}
+
+/* =========================================
+   5. 🌸 10大主题定义 🌸
+========================================= */
+.theme-sakura { --bg-color: #fff0f5; --border-color: #ffb7c5; --shadow-color: #ffb7c5; --accent-color: #ff69b4; --line-color: #ffe4e9; --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23ff69b4' d='M481.8 216.6c-13.6-9.4-28.1-18.4-41.3-25.9c-9-5.1-18-9.9-26.9-14.7c-17.4-9.5-34.8-18.9-52.2-28.1c-8.6-4.6-17.2-9.2-25.9-13.7c-16.7-8.8-33.5-17.5-50.4-26c-7.8-3.9-15.6-7.8-23.4-11.6c-14.6-7.2-29.3-14.3-44-21.2c-5.9-2.8-11.8-5.5-17.7-8.2c-6.9-3.2-13.9-6.3-20.8-9.4c-11.7-5.2-23.4-10.4-35.2-15.4c-2.6-1.1-5.1-2.3-7.7-3.4C32.4 30.3 7.8 21 7.8 21c-7.6-2.9-13.4-2.5-16.8 1.3S-9.2 34.6-1.6 37.5c0 0 21.2 8.1 36.8 14.1c2.6 1 5.1 2 7.6 3c11.5 4.6 23.1 9.2 34.7 14c6.7 2.8 13.3 5.6 20 8.5c5.8 2.5 11.5 5 17.3 7.6c13.8 6.2 27.6 12.4 41.4 18.9c7.5 3.5 15 7 22.5 10.6c15.4 7.4 30.9 14.8 46.5 22.5c8.3 4.2 16.7 8.4 25 12.7c16.4 8.4 32.8 17 49.2 25.7c8.8 4.7 17.5 9.3 26.3 14.1c13.5 7.4 27 14.9 40.4 22.6c21.7 12.4 41.8 25.1 58.5 36c7.6 5 12.2 11.1 13.1 18.3c1 7.3-2.4 14.2-9.4 18.8c-27.9 18.4-58.8 32.6-91 42c-33.8 9.9-69.2 14.9-104.7 14.9c-35.5 0-70.8-5-104.7-14.9c-32.2-9.4-63.1-23.6-91-42c-7-4.6-10.4-11.5-9.4-18.8c.9-7.2 5.5-13.3 13.1-18.3c16.7-10.9 36.8-23.6 58.5-36c13.4-7.7 26.9-15.3 40.4-22.6c8.8-4.8 17.6-9.5 26.3-14.1c16.4-8.7 32.8-17.3 49.2-25.7c8.3-4.3 16.7-8.6 25-12.7c15.6-7.8 31.1-15.1 46.5-22.5c7.5-3.6 15-7.1 22.5-10.6c13.8-6.5 27.6-12.7 41.4-18.9c5.8-2.6 11.5-5.1 17.3-7.6c6.7-2.9 13.3-5.7 20-8.5c11.6-4.8 23.2-9.4 34.7-14c2.5-1 5.1-2 7.6-3c15.6-6 36.8-14.1 36.8-14.1c7.6-2.9 9.4-12.4 1.3-16.2s-11.3-4.2-16.8-1.3c0 0-24.6 9.3-50.7 19.1c-2.6 1.1-5.1 2.3-7.7 3.4c-11.8 4.9-23.5 10.2-35.2 15.4c-6.9 3.1-13.9 6.3-20.8 9.4c-5.9 2.8-11.8 5.5-17.7 8.2c-14.6 6.9-29.3 14-44 21.2c-7.8 3.8-15.6 7.7-23.4 11.6c-16.9 8.5-33.7 17.2-50.4 26c-8.6 4.5-17.3 9.1-25.9 13.7c-17.4 9.2-34.8 18.6-52.2 28.1c-9 4.9-18 9.7-26.9 14.7c-13.2 7.4-27.7 16.5-41.3 25.9c-38.6 26.6-45.2 52-23.2 77c26.3 29.8 75 56.8 148.4 73.4c34 7.7 68.2 11.6 102.2 11.6c34 0 68.2-3.9 102.2-11.6c73.4-16.6 122.1-43.6 148.4-73.4c22-25 15.4-50.4-23.2-77zm-225.8 207c-32.3 0-63.8-4.5-93.7-13.2c-28.5-8.3-55.9-20.8-80.9-36.9c-4.2-2.7-6-6.2-5.6-9.4s2.7-6 6.9-8.7c15.2-9.9 33.7-21.7 53.8-33c12.4-7 24.9-14 37.4-20.8c8.1-4.4 16.3-8.8 24.3-13.1c15.2-8 30.4-15.9 45.6-23.7c7.7-4 15.5-7.9 23.1-11.8c14.4-7.2 28.8-14.2 43.2-21c6-2.8 12.1-5.6 18.1-8.4c7-3.2 14.1-6.4 21.1-9.5c11.9-5.3 23.7-10.5 35.7-15.6c2.6-1.1 5.3-2.3 7.9-3.4c15.5-6.6 34.9-14.7 34.9-14.7c2.3-.9 3.7-2.9 3.3-5s-2.3-3.8-4.6-2.9c0 0-22.1 8.4-45.5 17.2c-2.4 1-4.7 2-7.1 3c-10.7 4.3-21.4 8.9-32.1 13.4c-6.3 2.7-12.7 5.4-19 8.1c-5.4 2.3-10.8 4.7-16.2 7c-13.4 5.9-26.8 11.9-40.2 18.1c-7.1 3.3-14.3 6.6-21.4 10c-15.4 7.3-30.9 14.7-46.2 22.3c-7.9 3.9-15.8 7.8-23.6 11.8c-15.9 8.1-31.8 16.3-47.6 24.7c-8.1 4.3-16.2 8.6-24.2 13c-12.2 6.6-24.5 13.3-36.7 20.1c-19.9 11.1-38.3 22.6-53.1 32.2c-4.1 2.7-5.8 5.3-5.5 8.4s2.3 6 6.3 8.6c24.7 15.9 51.7 28.3 80 36.6c29.8 8.7 61.3 13.1 93.4 13.1c32.1 0 63.6-4.5 93.4-13.1c28.3-8.3 55.3-20.7 80-36.6c4-2.6 5.9-5.6 6.3-8.6s-1.3-5.7-5.5-8.4c-14.8-9.6-33.2-21.1-53.1-32.2c-12.2-6.8-24.5-13.5-36.7-20.1c-8-4.4-16.1-8.7-24.2-13c-15.8-8.4-31.7-16.6-47.6-24.7c-7.9-4-15.7-7.9-23.6-11.8c-15.3-7.6-30.8-15-46.2-22.3c-7.1-3.4-14.2-6.7-21.4-10c-13.4-6.1-26.8-12.1-40.2-18.1c-5.4-2.4-10.8-4.7-16.2-7c-6.3-2.7-12.7-5.4-19-8.1c-10.7-4.6-21.4-9.1-32.1-13.4c-2.4-1-4.7-2.1-7.1-3c-23.4-8.8-45.5-17.2-45.5-17.2c-2.3-.9-5.1.8-5.4 2.9s.6 4.1 2.9 5c0 0 19.4 8.1 34.9 14.7c2.6 1.1 5.3 2.3 7.9 3.4c12 5.1 23.8 10.3 35.7 15.6c7 3.1 14 6.3 21.1 9.5c6 2.7 12.1 5.6 18.1 8.4c14.4 6.8 28.8 13.7 43.2 21c7.7 3.8 15.4 7.8 23.1 11.8c15.2 7.9 30.4 15.7 45.6 23.7c8 4.3 16.1 8.6 24.3 13.1c12.5 6.8 24.9 13.8 37.4 20.8c20.1 11.3 38.6 23.1 53.8 33c4.1 2.7 7 6.2 5.6 9.4s-5.8 5.6-9.9 8.3c-24.9 16.1-52.2 28.6-80.8 36.9c-29.9 8.8-61.4 13.3-93.7 13.3z'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23000' d='M50 0 C60 20 70 30 100 40 C70 50 60 60 50 100 C40 60 30 50 0 40 C30 30 40 20 50 0' /%3E%3C/svg%3E"); }
+.theme-blue { --bg-color: #f0f8ff; --border-color: #add8e6; --shadow-color: #add8e6; --accent-color: #4682b4; --line-color: rgba(70,130,180,0.1); --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234682b4'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Ccircle cx='18' cy='6' r='2'/%3E%3Ccircle cx='6' cy='18' r='2'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='20' fill='%23000'/%3E%3Ccircle cx='70' cy='60' r='15' fill='%23000'/%3E%3Ccircle cx='80' cy='20' r='10' fill='%23000'/%3E%3C/svg%3E"); }
+.theme-mint { --bg-color: #f5fffa; --border-color: #98fb98; --shadow-color: #98fb98; --accent-color: #2e8b57; --line-color: rgba(46,139,87,0.1); --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232e8b57'%3E%3Cpath d='M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23000' d='M50,10 Q90,10 90,50 Q90,90 50,90 Q10,90 10,50 Q10,10 50,10 Z M50,10 L50,90'/%3E%3C/svg%3E"); }
+.theme-lemon { --bg-color: #fffff0; --border-color: #f0e68c; --shadow-color: #f0e68c; --accent-color: #e6c200; --line-color: rgba(240,230,140,0.2); --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e6c200'%3E%3Cpath d='M12,2L15,9L22,9L16,14L18,21L12,17L6,21L8,14L2,9L9,9L12,2Z'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35' fill='%23000'/%3E%3C/svg%3E"); }
+.theme-taro { --bg-color: #f8f4ff; --border-color: #dcd0ff; --shadow-color: #dcd0ff; --accent-color: #9370db; --line-color: #ece0ff; --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239370db'%3E%3Cpath d='M12 2L2 12L12 22L22 12L12 2Z'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23000' d='M40 10 A30 30 0 1 0 40 90 A20 20 0 1 1 40 10' /%3E%3C/svg%3E"); }
+.theme-cocoa { --bg-color: #fff8f0; --border-color: #deb887; --shadow-color: #deb887; --accent-color: #a0522d; --line-color: #eecfa1; --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0522d'%3E%3Cpath d='M12,2C9,2 7,3.5 6,5C4.5,4 3,4.5 2,6C1,7.5 1.5,9 3,10C2,11 2,13 3,14C1.5,15 1,16.5 2,18C3,19.5 4.5,20 6,19C7,20.5 9,22 12,22C15,22 17,20.5 18,19C19.5,20 21,19.5 22,18C23,16.5 22.5,15 21,14C22,13 22,11 21,10C22.5,9 23,7.5 22,6C21,4.5 19.5,4 18,5C17,3.5 15,2 12,2M12,6C13.66,6 15,7.34 15,9C15,10.66 13.66,12 12,12C10.34,12 9,10.66 9,9C9,7.34 10.34,6 12,6M9,14C9.5,14 10,14.5 10,15C10,15.5 9.5,16 9,16C8.5,16 8,15.5 8,15C8,14.5 8.5,14 9,14M15,14C15.5,14 16,14.5 16,15C16,15.5 15.5,16 15,16C14.5,16 14,15.5 14,15C14,14.5 14.5,14 15,14Z'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='60' r='25' fill='%23000'/%3E%3Ccircle cx='25' cy='30' r='10' fill='%23000'/%3E%3Ccircle cx='50' cy='20' r='10' fill='%23000'/%3E%3Ccircle cx='75' cy='30' r='10' fill='%23000'/%3E%3C/svg%3E"); }
+.theme-peach { --bg-color: #fff5ee; --border-color: #ffdab9; --shadow-color: #ffdab9; --accent-color: #ff7f50; --line-color: rgba(255,127,80,0.1); --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff7f50'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23000' d='M50 80 L20 50 A20 20 0 0 1 50 20 A20 20 0 0 1 80 50 Z' /%3E%3C/svg%3E"); }
+.theme-gray { --bg-color: #f8f9fa; --border-color: #ced4da; --shadow-color: #ced4da; --accent-color: #6c757d; --line-color: rgba(108,117,125,0.1); --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236c757d'%3E%3Cpath d='M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23000' d='M10 10 L90 90 M10 90 L90 10' stroke='%23000' stroke-width='10'/%3E%3C/svg%3E"); }
+.theme-berry { --bg-color: #fff0f0; --border-color: #ffcdd2; --shadow-color: #ffcdd2; --accent-color: #ef5350; --line-color: rgba(239,83,80,0.1); --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ef5350'%3E%3Cpath d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='10' y='80' font-size='80' fill='%23000'%3E♪%3C/text%3E%3C/svg%3E"); }
+.theme-soda { --bg-color: #e0f7fa; --border-color: #b2ebf2; --shadow-color: #b2ebf2; --accent-color: #00acc1; --line-color: rgba(0,172,193,0.1); --falling-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300acc1'%3E%3Cpath d='M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-5.4-5.4 5.4 5.4 0 0 1 2.26-4.4c-.44-.06-.9-.1-1.36-.1z'/%3E%3C/svg%3E"); --doodle-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='20' y='20' width='60' height='60' transform='rotate(45 50 50)' fill='%23000'/%3E%3C/svg%3E"); }
 </style>
