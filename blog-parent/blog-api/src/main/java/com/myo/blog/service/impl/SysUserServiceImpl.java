@@ -16,7 +16,7 @@ import com.myo.blog.entity.Result;
 import com.myo.blog.entity.UserVo;
 import com.myo.blog.utils.HttpContextUtils;
 import com.myo.blog.utils.IpUtils;
-import org.apache.catalina.User;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -264,18 +264,14 @@ public class SysUserServiceImpl implements SysUserService {
 
 
 
-    @Override
-    public int update(LambdaUpdateWrapper<SysUser> lambdaUpdateWrapper){
 
-        return this.sysUserMapper.update(null,lambdaUpdateWrapper);
-    }
 
     @Override
-    public void updateById(SysUser sysUser) {
+    public boolean updateById(SysUser sysUser) {
         // 根据用户ID更新用户信息
         // 使用MyBatis-Plus的updateById方法，根据实体类主键进行更新
         // 注意：sysUser对象必须包含有效的ID字段值
-        this.sysUserMapper.updateById(sysUser);
+        return this.sysUserMapper.updateById(sysUser) > 0;
     }
 
 

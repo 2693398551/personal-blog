@@ -63,15 +63,10 @@ public interface SysUserService {
      * @param sysUser
      */
     void save(SysUser sysUser);
-    /**
-     * 修改ip
-     * @param lambdaUpdateWrapper
-     */
-    int update(LambdaUpdateWrapper<SysUser> lambdaUpdateWrapper);
 
     /**
      * 根据ID更新用户信息
      * @param sysUser
      */
-    void updateById(SysUser sysUser);
+    boolean updateById(SysUser sysUser);
 }

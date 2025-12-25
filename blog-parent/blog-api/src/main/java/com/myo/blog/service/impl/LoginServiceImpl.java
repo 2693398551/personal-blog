@@ -190,6 +190,25 @@ public class LoginServiceImpl implements LoginService {
         return Result.success("用户已强制下线");
     }
 
+
+    /*
+    正向索引 (验证身份用)
+    这是系统每时每刻都在用的索引，没有它用户就没法登录。
+    它的作用：拿着 令牌(Token) 找 人。
+    使用场景：用户每次刷新页面、点赞、发文章时。后端需要知道“这个 Token 到底是谁？”
+    Redis 结构：
+    Key: TOKEN_ + eyJhbGciOiJIUz... (那串很长的 Token 字符串)
+    Value: {"id":1001, "nickname":"myo", "avatar":"..."} (用户信息的 JSON)
+    通俗比喻： 这就像酒店的门禁系统。 客人拿着 房卡 (Token) 刷门，系统读取房卡信息，确认这是 张三 (User Info)，然后开门。
+
+    反向索引 (管理用户用)
+    这是为了后台管理和安全控制专门增加的索引。
+    它的作用：拿着 人(User ID) 找 令牌(Token)。
+    使用场景：管理员踢人、修改密码强制下线、单点登录（挤掉旧设备）。
+    Redis 结构：
+    Key: USER_TOKEN_ + 1001 (用户的 ID)
+    Value: eyJhbGciOiJIUz... (那串很长的 Token 字符串)
+    通俗比喻： 这就像酒店前台的入住登记薄。 老板想把 张三 (User ID) 赶出去，但他手里没有张三的房卡。于是他查登记薄，找到张三拿的是 101号房卡 (Token)，然后通知门禁系统把 101号房卡 作废。*/
     /**
      * 辅助方法：将 Token 和用户信息存入 Redis (双向绑定)
      */
