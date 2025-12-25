@@ -59,19 +59,16 @@ public class LoginServiceImpl implements LoginService {
 
         String token = JWTUtils.createToken(sysUser.getId());
 
-        //更新最后登录IP
-            update(sysUser.getId());
+        //更新最后登录IP,并设置登录时间
+        updateLoginInfo(sysUser.getId());
+        //直接调用通用方法存储双向索引
+        saveTokenToRedis(token, sysUser);
 
-        //同时存储两份数据
-        // 1. 正向索引：通过 Token 找 用户信息 (用于登录验证)
-        redisTemplate.opsForValue().set("TOKEN_"+token, JSON.toJSONString(sysUser),3, TimeUnit.DAYS);
-        // 2. 反向索引：通过 用户ID 找 Token (用于退出登录)
-        redisTemplate.opsForValue().set("USER_TOKEN_" + sysUser.getId(), token, 3, TimeUnit.DAYS);
-        return Result.success(token);
+          return Result.success(token);
     }
 
     // 建议直接传 id 进来更新
-    public void update(Long userId){
+    public void updateLoginInfo(Long userId){
         // 获取当前请求的 IP 地址
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
         String ip= IpUtils.getIpAddr(request);
@@ -167,10 +164,11 @@ public class LoginServiceImpl implements LoginService {
         sysUser.setIpaddr(ip);
         sysUser.setLastIpaddr("");
         this.sysUserService.save(sysUser);
-
+        // 生成 Token
         String token = JWTUtils.createToken(sysUser.getId());
+        // 调用通用方法存储双向索引
+        saveTokenToRedis(token, sysUser);
 
-        redisTemplate.opsForValue().set("TOKEN_"+token, JSON.toJSONString(sysUser),3, TimeUnit.DAYS);
         return Result.success(token);
     }
 
@@ -190,6 +188,17 @@ public class LoginServiceImpl implements LoginService {
         redisTemplate.delete("USER_TOKEN_" + userId);
 
         return Result.success("用户已强制下线");
+    }
+
+    /**
+     * 辅助方法：将 Token 和用户信息存入 Redis (双向绑定)
+     */
+    private void saveTokenToRedis(String token, SysUser sysUser) {
+        // 1. 正向索引：通过 Token 找 用户信息 (用于登录验证)，正向索引：我有房卡，我要进门 (平时用)
+        redisTemplate.opsForValue().set("TOKEN_" + token, JSON.toJSONString(sysUser), 3, TimeUnit.DAYS);
+
+        // 2. 反向索引：通过 用户ID 找 Token (用于踢人下线、单点登录)，反向索引：我有名字，我要查房卡 (踢人用)
+        redisTemplate.opsForValue().set("USER_TOKEN_" + sysUser.getId(), token, 3, TimeUnit.DAYS);
     }
 
 }
