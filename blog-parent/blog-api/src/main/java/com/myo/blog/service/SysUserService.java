@@ -7,7 +7,7 @@ import com.myo.blog.dao.pojo.SysUser;
 import com.myo.blog.entity.Result;
 import com.myo.blog.entity.UserVo;
 import com.myo.blog.entity.params.UserParam;
-import org.apache.catalina.User;
+
 
 public interface SysUserService {
 
