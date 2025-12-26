@@ -23,14 +23,14 @@ Vue.use(Router)
 const router = new Router({
 	/* mode: 'history', */
 	  scrollBehavior: function (to, from, savedPosition) {
-	       if (savedPosition) {        
-	            return savedPosition    
-	        } else {      
-	            if (from.meta.keepAlive) {        
-	                 from.meta.savedPosition = document.body.scrollTop;      
-	            }       
-	              return { x: 0, y: to.meta.savedPosition || 0 }    
-	        }  
+	       if (savedPosition) {
+	            return savedPosition
+	        } else {
+	            if (from.meta.keepAlive) {
+	                 from.meta.savedPosition = document.body.scrollTop;
+	            }
+	              return { x: 0, y: to.meta.savedPosition || 0 }
+	        }
 	  },
   routes: [
     {
@@ -38,10 +38,10 @@ const router = new Router({
       component: r => require.ensure([], () => r(require('@/views/blog/BlogWrite')), 'blogwrite'),
       meta: {
         requireLogin: true,
-		
+
       },
     },
-	
+
     {
       path: '',
       /* name: 'Home', */
@@ -72,10 +72,6 @@ const router = new Router({
 			component: r => require.ensure([], () => r(require('@/views/blog/BlogNavigate')), 'blogNavigate')
 		},
 		{
-			path:'/music',
-			component: r => require.ensure([], () => r(require('@/views/blog/BlogMusic')), 'blogMusic')
-		},
-		{
 			path:'/Resume',
 			component: r => require.ensure([], () => r(require('@/views/blog/BlogResume')), 'BlogResume')
 		},
@@ -86,7 +82,7 @@ const router = new Router({
         {
           path: '/messageBoard',
           component: r => require.ensure([], () => r(require('@/views/MessageBoard')), 'messageboard')
-        },		
+        },
         {
           path: '/view/:id',
           component: r => require.ensure([], () => r(require('@/views/blog/BlogView')), 'blogview')
@@ -162,11 +158,11 @@ router.beforeEach((to, from, next) => {
   }
 })
 
- 
+
  const VueRouterPush = Router.prototype.push
 Router.prototype.push = function push (to) {
   return VueRouterPush.call(this, to).catch(err => err)
-} 
+}
 
 
 export default router

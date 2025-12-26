@@ -25,6 +25,7 @@ import 'nprogress/nprogress.css' //进度条样式
 
 
 Vue.use(animate)
+
 Vue.config.productionTip = false
 Vue.prototype.$axios=axios
 // 设置全局变量

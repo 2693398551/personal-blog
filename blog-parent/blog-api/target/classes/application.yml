@@ -1,0 +1,33 @@
+server:
+  port: 48882
+
+spring:
+  application:
+    name: myo_blog
+  datasource:
+    url: jdbc:mysql://localhost:3306/blog?useUnicode=true&characterEncoding=UTF-8&serverTimeZone=UTC
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: localhost
+    port: 6379
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 0
+      location: E:\\temp
+      max-request-size: 20MB
+      max-file-size: 20MB
+      resolve-lazily: false
+
+# mybatis-plus
+mybatis-plus:
+  global-config:
+    db-config:
+      table-prefix: myo_
+
+# 七牛云
+qiniu:
+  accessKey: 8wxtz9gMub4cWb-f1wwaSea2jI3wmyQmI7sbLwgy
+  accessSecretKey: RpmFkoYQAKk3Vk0BFgkbhsplvITp7OZoWNr63roT

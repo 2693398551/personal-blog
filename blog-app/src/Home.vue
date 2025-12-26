@@ -21,8 +21,8 @@
 import BaseFooter from '@/components/BaseFooter'
 import BaseHeader from '@/views/BaseHeader'
 import headertop from '@/components/page'
-import $ from 'jquery'
-/* import apayer from '@/components/apayer' */
+
+
 export default {
   name: 'Home',
   data (){

@@ -9,7 +9,7 @@
 		  </div>
 		  <!--右边-->
 		  <div class="header-right  menu-transition menu-transition-start">
-			  
+
 			    <div class="header-container">
 			      <nav class="header-nav">
 			        <ul>
@@ -18,27 +18,26 @@
 			          <li class="header-right-li" @click="tag">标签</li>
 			          <li class="header-right-li" @click="image">图片</li>
 			          <li class="header-right-li" @click="nav">导航</li>
-			          <li class="header-right-li" @click="music">音乐</li>
 			          <!-- <li class="header-right-li" @click="log">日志</li> -->
 			          <li class="header-right-li" @click="write">文章</li>
 			          <li class="header-right-li" @click="resume">关于</li>
-			          <li class="header-right-li"  v-if="!user.login&&mac" @click="login">秘密社</li> 
-			          <li class="header-right-li"  v-if="user.login&&mac" @click="logout">退出</li> 
+			          <li class="header-right-li"  v-if="!user.login&&mac" @click="login">秘密社</li>
+			          <li class="header-right-li"  v-if="user.login&&mac" @click="logout">退出</li>
 			        </ul>
 			      </nav>
 			    </div>
 
 		  </div>
-		  
-		  
- 
+
+
+
 	</div>
-	
-	
-	
-	
+
+
+
+
   </header>
-  
+
 </template>
 
 <script>
@@ -56,7 +55,7 @@ import $ from 'jquery'
       }
     },
 	mounted() {
-		
+
 		this.getMAC()
 		/* window.addEventListener('scroll', this.handleScroll, true); */
 
@@ -96,7 +95,7 @@ import $ from 'jquery'
 		  if(top==0){
 			$(".site-header").removeClass("yya");
 			$(".header-right").removeClass("menu-transition");
-			
+
 		  }else{
 			$(".site-header").addClass("yya");
 			$(".header-right").addClass("menu-transition");
@@ -112,7 +111,7 @@ import $ from 'jquery'
 					that.$message({type: 'error', message: 'mac!', showClose: true})
 				  }
 				})
-				
+
 		},
       logout() {
         let that = this
@@ -139,9 +138,6 @@ import $ from 'jquery'
 	  nav(){
 		  this.$router.push({path: `/nav`})
 	  },
-	  music(){
-		   this.$router.push({path: `/music`})
-	  },
 	  write(){
 		  this.$router.push({path: `/write`})
 	  },
@@ -159,17 +155,17 @@ import $ from 'jquery'
 		 //悬浮
 		 let top=document.documentElement.scrollTop;
 		 if(top==0){$(".header-right").addClass("menu-transition");}
-		
+
 	  },
 	  HideHeader(){
 		 //悬浮离开
 		 let top=document.documentElement.scrollTop;
 		 if(top==0){
 			 $(".header-right").removeClass("menu-transition");
-			 
+
 		 }
 	  }
-	  
+
     }
   }
 </script>
@@ -231,7 +227,7 @@ header {
 }
 /****/
 .header-header{
-	
+
 }
 .header-left{
 	float: left;
@@ -293,7 +289,7 @@ header {
 }
 /*导航栏  */
 .header-nav {
- 
+
 }
 .header-nav ul li {
   list-style: none;
@@ -355,7 +351,7 @@ header {
 		float: left;
 		position: relative;
 		font-weight: 20;
-	
+
 	}
 	.header-right-li{
 		cursor:pointer;
@@ -366,7 +362,7 @@ header {
 	.header-left-li{
 		font-size: 18px;
 	}
-	
+
 	.unfold{
 		display:block ;
 		float: left;
@@ -388,7 +384,7 @@ header {
 		display: none;
 	}
 
-	
+
 }
 
 

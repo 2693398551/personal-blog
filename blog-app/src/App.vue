@@ -6,42 +6,23 @@
      </keep-alive> -->
         <!-- 不需要缓存的视图组件 !$route.meta.keepAlive-->
         <router-view ></router-view>
-		<!-- <apayer></apayer> -->
     <go-top></go-top>
 	<theme></theme>
-    <ChatBot></ChatBot>
+
   </div>
 </template>
 
 <script>
 import GoTop from '@/components/gotop/GoTop'
-import apayer from '@/components/apayer'
+
 import theme from '@/components/theme'
-import ChatBot from '@/components/chatbot/ChatBot'
+
 export default {
   name: 'App',
-  components: { GoTop,apayer ,theme,ChatBot},
+  components: { GoTop ,theme},
   created () {
 	  let scrollTop=localStorage.getItem("scrollTop");
-/* 	  setTimeout(() => {
-      window.L2Dwidget.init({
-        pluginRootPath: '../static/live2d/',//插件在站点上的根目录(相对路径)
-        pluginJsPath: 'lib/', //脚本文件相对与插件根目录路径
-        pluginModelPath: 'model/histoire/',//模型文件相对与插件根目录路径
-        tagMode: false,//标签模式, 是否仅替换 live2d tag标签而非插入到所有页面中
-        debug: false,//调试, 是否在控制台输出日志
-        model: {
-			jsonPath: '../static/live2dw/model/histoire/model.json' ,//主文件路径
-		},
-        display: { position: 'left', width: 150, height: 250 ,hOffset:30,},
-        mobile: { show: true },
-        log: false,
-		dialog:{
-		    enable:true,//显示人物对话框
-		    //hitokoto:true,//使用一言API
-		  },
-      })
-    }, 1000) */
+
   },
   mounted(){
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="diary-wrap">
+  <div class="diary-wrap" >
     <div
       class="diary-card"
       :class="[themeClass, textureClass, { 'is-reverse': textalign(index) === 'right' }]"
