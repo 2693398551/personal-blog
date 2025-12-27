@@ -64,10 +64,6 @@ const router = new Router({
           component: r => require.ensure([], () => r(require('@/views/blog/BlogArchive')), 'archives')
         },
 		{
-			path:'/Image',
-			component: r => require.ensure([], () => r(require('@/views/blog/BlogGallery')), 'blogGallery')
-		},
-		{
 			path:'/nav',
 			component: r => require.ensure([], () => r(require('@/views/blog/BlogNavigate')), 'blogNavigate')
 		},

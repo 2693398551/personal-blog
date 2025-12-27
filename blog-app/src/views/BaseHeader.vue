@@ -16,7 +16,7 @@
 			          <li class="header-right-li" @click="home">首页</li>
 			          <li class="header-right-li" @click="archives">Archives</li>
 			          <li class="header-right-li" @click="tag">标签</li>
-			          <li class="header-right-li" @click="image">图片</li>
+
 			          <li class="header-right-li" @click="nav">导航</li>
 			          <!-- <li class="header-right-li" @click="log">日志</li> -->
 			          <li class="header-right-li" @click="write">文章</li>
@@ -131,9 +131,6 @@ import $ from 'jquery'
 	  },
 	  tag(){
 		  this.$router.push({path: `/tag/all`})
-	  },
-	  image(){
-		  this.$router.push({path: `/Image`})
 	  },
 	  nav(){
 		  this.$router.push({path: `/nav`})
