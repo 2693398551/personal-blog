@@ -1,6 +1,9 @@
 package com.myo.blog.entity;
 
 import lombok.Data;
+
+import java.time.LocalDate;
+
 //作用：登录后返回给前端的用户信息
 @Data
 public class LoginUserVo {
@@ -18,4 +21,13 @@ public class LoginUserVo {
     private String email;//邮箱
 
     private String mobilePhoneNumber;//手机号
+
+    private String bio;
+
+    private LocalDate birthday;
+
+    private String website;
+
+    private Integer source;
+
 }

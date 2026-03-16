@@ -2,6 +2,8 @@ package com.myo.blog.entity.params;
 
 import lombok.Data;
 
+import java.time.LocalDate;
+
 /**
  * Created by IntelliJ IDEA.
  *
@@ -21,4 +23,13 @@ public class UserParam {
     private Integer sex;//性别 0未知 1男 2女
     private String remark;//备注
     private String status;//状态 0-正常 1-警告 99-封禁
+    /** 个人简介 */
+    private String bio;
+
+    /** 生日 */
+    private LocalDate birthday;
+
+    /** 个人主页 */
+    private String website;
+
 }

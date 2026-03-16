@@ -92,6 +92,10 @@
         <el-icon><DataLine /></el-icon>
         <span>操作日誌</span>
       </el-menu-item>
+      <el-menu-item index="/system/loginLog">
+        <el-icon><DataLine /></el-icon>
+        <span>登入日志</span>
+      </el-menu-item>
     </el-sub-menu>
 
       <el-menu-item index="/system/task">

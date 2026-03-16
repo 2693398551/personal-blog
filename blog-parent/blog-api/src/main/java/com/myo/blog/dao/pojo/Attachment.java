@@ -50,4 +50,5 @@ public class Attachment {
     // 备注，用于说明文件来源
     // 例如：数据库备份任务、日志导出任务、文章封面上传
     private String remark;
+
 }

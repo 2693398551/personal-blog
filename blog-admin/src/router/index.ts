@@ -60,6 +60,11 @@ const routes: Array<RouteRecordRaw> = [
                 component: () => import('../views/system/log.vue'),
                 meta: { title: '操作日志' }
             },
+            {
+                path: 'system/loginLog',
+                component: () => import('../views/system/loginLog.vue'),
+                meta: { title: '操作日志' }
+            },
             // === 监控管理 ===
             {
                 path: 'system/cache',

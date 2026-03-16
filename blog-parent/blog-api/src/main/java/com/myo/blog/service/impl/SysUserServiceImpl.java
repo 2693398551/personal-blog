@@ -118,8 +118,11 @@ public class SysUserServiceImpl implements SysUserService {
         loginUserVo.setAccount(sysUser.getAccount());
         loginUserVo.setEmail(sysUser.getEmail());
         loginUserVo.setSex(sysUser.getSex());
-
         loginUserVo.setMobilePhoneNumber(sysUser.getMobilePhoneNumber());
+        loginUserVo.setBio(sysUser.getBio());
+        loginUserVo.setBirthday(sysUser.getBirthday());
+        loginUserVo.setWebsite(sysUser.getWebsite());
+        loginUserVo.setSource(sysUser.getSource());
         return Result.success(loginUserVo);
     }
 
@@ -154,6 +157,7 @@ public class SysUserServiceImpl implements SysUserService {
         return userVo;
     }
 
+    //
     @Override
     public int updateUser(UserParam userParam) {
         String id = userParam.getId();
@@ -180,7 +184,6 @@ public class SysUserServiceImpl implements SysUserService {
             hasUpdate = true;
         }
         if (StringUtils.isNotBlank(userParam.getAvatar())) {
-
             updateWrapper.set(SysUser::getAvatar, userParam.getAvatar());
             hasUpdate = true;
         }
@@ -200,15 +203,31 @@ public class SysUserServiceImpl implements SysUserService {
             updateWrapper.set(SysUser::getRemark, userParam.getRemark());
             hasUpdate = true;
         }
-
+        // ===== 新增：bio / birthday / website =====
+        if (StringUtils.isNotBlank(userParam.getBio())) {
+            updateWrapper.set(SysUser::getBio, userParam.getBio());
+            hasUpdate = true;
+        }
+        if (userParam.getBirthday() != null) {
+            updateWrapper.set(SysUser::getBirthday, userParam.getBirthday());
+            hasUpdate = true;
+        }
+        if (StringUtils.isNotBlank(userParam.getWebsite())) {
+            updateWrapper.set(SysUser::getWebsite, userParam.getWebsite());
+            hasUpdate = true;
+        }
+        // ==========================================
 
         if (hasUpdate) {
+            // 每次有字段变更，同步更新 update_date
+            updateWrapper.set(SysUser::getUpdateDate, System.currentTimeMillis());
+
             int rows = this.sysUserMapper.update(null, updateWrapper);
             if (rows > 0) {
                 if (needKickout) {
-                    kickUserOffline(id); // 直接传 String
+                    kickUserOffline(id);
                 } else {
-                    updateRedisCache(id); // 直接传 String
+                    updateRedisCache(id);
                 }
             }
             return rows;

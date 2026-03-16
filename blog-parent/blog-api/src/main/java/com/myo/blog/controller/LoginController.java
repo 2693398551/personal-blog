@@ -4,6 +4,7 @@ import com.myo.blog.common.aop.RateLimit;
 import com.myo.blog.dao.mapper.SysUserMapper;
 import com.myo.blog.dao.pojo.SysUser;
 import com.myo.blog.entity.ErrorCode;
+import com.myo.blog.service.LoginLogService;
 import com.myo.blog.service.LoginService;
 import com.myo.blog.entity.Result;
 import com.myo.blog.entity.params.LoginParam;
@@ -32,12 +33,14 @@ public class LoginController {
     // 注入 SysUserMapper 用于查询权限
     private final SysUserMapper sysUserMapper;
 
+    private final LoginLogService loginLogService;
+
     // 防止暴力破解，1分钟限制5次
     @RateLimit(time = 60, count = 5, msg = "账号或密码错误次数过多，请1分钟后再试")
     @PostMapping
-    public Result login(@RequestBody LoginParam loginParam){
-        HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
-        String ip = IpUtils.getIpAddr(request);
+    public Result login(@RequestBody LoginParam loginParam, HttpServletRequest request) {
+        HttpServletRequest req = HttpContextUtils.getHttpServletRequest();
+        String ip = IpUtils.getIpAddr(req);
         String account = loginParam.getAccount();
 
         log.info("登录请求开始 - IP: {}, 账号: {}", ip, account);
@@ -47,17 +50,27 @@ public class LoginController {
 
             if (result.isSuccess()) {
                 log.info("登录成功 - IP: {}, 账号: {}", ip, account);
+                // 异步记录登录成功日志（userId 从 token 解析，这里直接查一次用户）
+                // LoginService.login 成功时返回的 data 是 token 字符串
+                // 用账号查一下 userId
+                com.myo.blog.dao.pojo.SysUser user = loginService.checkToken((String) result.getData());
+                String userId = user != null ? user.getId() : null;
+                loginLogService.record(request, userId, account, 1, null);
             } else {
                 log.warn("登录失败 - IP: {}, 账号: {}, 错误码: {}, 错误信息: {}",
                         ip, account, result.getCode(), result.getMsg());
+                // 异步记录登录失败日志
+                loginLogService.record(request, null, account, 0, result.getMsg());
             }
 
             return result;
         } catch (Exception e) {
             log.error("登录异常 - IP: {}, 账号: {}, 异常信息: {}", ip, account, e.getMessage(), e);
+            loginLogService.record(request, null, account, 0, "系统异常");
             return Result.fail(500, "系统异常，请稍后重试");
         }
     }
+
 
 
     /**

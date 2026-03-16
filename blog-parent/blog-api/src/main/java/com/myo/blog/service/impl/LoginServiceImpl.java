@@ -38,9 +38,11 @@ import java.util.concurrent.TimeUnit;
 public class LoginServiceImpl implements LoginService {
 
     private final SysUserService sysUserService;
-
     private final RedisTemplate<String,String> redisTemplate;
     private final SysUserMapper sysUserMapper;
+
+    private static final int MAX_FAIL_COUNT = 10;           // 最大连续失败次数
+    private static final long LOCK_DURATION_MS = 10 * 60 * 1000L; // 锁定时长：10分钟
 
     // 注入邮件发送器
     private final JavaMailSender mailSender;
@@ -66,61 +68,113 @@ public class LoginServiceImpl implements LoginService {
         String account = loginParam.getAccount();
         String password = loginParam.getPassword();
 
-        log.debug("开始验证登录信息 - 账号: {}", account);
-
-        if (StringUtils.isBlank(account) || StringUtils.isBlank(password)){
-            log.warn("登录参数为空 - 账号: {}, 密码长度: {}", account, password != null ? password.length() : 0);
-            return Result.fail(ErrorCode.PARAMS_ERROR.getCode(),ErrorCode.PARAMS_ERROR.getMsg());
+        if (StringUtils.isBlank(account) || StringUtils.isBlank(password)) {
+            return Result.fail(ErrorCode.PARAMS_ERROR.getCode(), ErrorCode.PARAMS_ERROR.getMsg());
         }
 
+        // 1. 先查账号是否存在（不验证密码，用于判断锁定状态）
+        SysUser sysUser = sysUserService.findUserByAccount(account);
 
+        // 2. 账号存在时，检查是否处于锁定期
+        if (sysUser != null && sysUser.getLockTime() != null) {
+            long now = System.currentTimeMillis();
+            if (sysUser.getLockTime() > now) {
+                // 还在锁定期，计算剩余分钟数
+                long remainMinutes = (sysUser.getLockTime() - now) / 1000 / 60 + 1;
+                return Result.fail(ErrorCode.PARAMS_ERROR.getCode(),
+                        "账号已被临时锁定，请 " + remainMinutes + " 分钟后再试");
+            } else {
+                // 锁定已过期，自动解锁（清零失败次数和锁定时间）
+                SysUser unlock = new SysUser();
+                unlock.setId(sysUser.getId());
+                unlock.setLockTime(null);
+                unlock.setLoginFailCount(0);
+                unlock.setUpdateDate(System.currentTimeMillis());
+                sysUserService.updateById(unlock);
+                sysUser.setLockTime(null);
+                sysUser.setLoginFailCount(0);
+            }
+        }
+
+        // 3. 验证账号 + 密码
         password = DigestUtils.md5Hex(password + slat);
-        log.debug("密码加密完成 - 账号: {}", account);
+        SysUser validUser = sysUserService.findUser(account, password);
 
-        SysUser sysUser = sysUserService.findUser(account,password);
-        // ================== 账号校验 ==================
-        if (sysUser == null){
-            log.warn("用户不存在或密码错误 - 账号: {}", account);
-            return Result.fail(ErrorCode.ACCOUNT_PWD_NOT_EXIST.getCode(),ErrorCode.ACCOUNT_PWD_NOT_EXIST.getMsg());
+        // 4. 账号或密码错误
+        if (validUser == null) {
+            // 账号存在才累计失败次数，账号不存在直接返回（防止用户枚举）
+            if (sysUser != null) {
+                int failCount = (sysUser.getLoginFailCount() == null ? 0 : sysUser.getLoginFailCount()) + 1;
+                SysUser failUpdate = new SysUser();
+                failUpdate.setId(sysUser.getId());
+                failUpdate.setLoginFailCount(failCount);
+                failUpdate.setUpdateDate(System.currentTimeMillis());
+
+                // 达到最大失败次数，写入锁定时间
+                if (failCount >= MAX_FAIL_COUNT) {
+                    failUpdate.setLockTime(System.currentTimeMillis() + LOCK_DURATION_MS);
+                    sysUserService.updateById(failUpdate);
+                    return Result.fail(ErrorCode.PARAMS_ERROR.getCode(),
+                            "密码错误次数过多，账号已被锁定 10 分钟");
+                }
+
+                sysUserService.updateById(failUpdate);
+                int remain = MAX_FAIL_COUNT - failCount;
+                return Result.fail(ErrorCode.ACCOUNT_PWD_NOT_EXIST.getCode(),
+                        "用户名或密码不存在，还可尝试 " + remain + " 次");
+            }
+            return Result.fail(ErrorCode.ACCOUNT_PWD_NOT_EXIST.getCode(),
+                    ErrorCode.ACCOUNT_PWD_NOT_EXIST.getMsg());
         }
-        // ================== 封禁校验 ==================
-        // 假设约定：status 为 "99" 时表示封禁，0 正常 1警告
-        if (sysUser.getStatus() != null && sysUser.getStatus() == 99) {
-            log.warn("该账号已被封禁 - 账号: {}", account);
-            return Result.fail(ErrorCode.ACCOUNT_DISABLED.getCode(), "账号已被封禁，请联系管理员");
+
+        // 5. 账号封禁检查
+        if (validUser.getStatus() != null && validUser.getStatus() == 99) {
+            // 检查是否临时封禁已到期，自动解封
+            if (validUser.getBanExpireTime() != null
+                    && validUser.getBanExpireTime() < System.currentTimeMillis()) {
+                SysUser unban = new SysUser();
+                unban.setId(validUser.getId());
+                unban.setStatus(0);
+                unban.setBanExpireTime(null);
+                unban.setUpdateDate(System.currentTimeMillis());
+                sysUserService.updateById(unban);
+            } else {
+                String banMsg = "账号已被封禁，请联系管理员";
+                if (validUser.getBanExpireTime() != null) {
+                    long remainDays = (validUser.getBanExpireTime() - System.currentTimeMillis()) / 1000 / 60 / 60 / 24 + 1;
+                    banMsg = "账号已被封禁，还有 " + remainDays + " 天解封";
+                }
+                return Result.fail(ErrorCode.ACCOUNT_DISABLED.getCode(), banMsg);
+            }
         }
 
-        log.info("用户验证成功 - 用户ID: {}, 账号: {}, 昵称: {}", sysUser.getId(), account, sysUser.getNickname());
+        // 6. 登录成功：清零失败次数，更新登录信息
+        String token = JWTUtils.createToken(validUser.getId());
+        updateLoginInfo(validUser.getId());
+        saveToken(token, validUser);
 
-        log.info("用户验证成功 - 用户ID: {}, 账号: {}, 昵称: {}", sysUser.getId(), account, sysUser.getNickname());
-
-        String token = JWTUtils.createToken(sysUser.getId());
-        //更新最后登录IP,并设置登录时间
-        updateLoginInfo(sysUser.getId());
-
-        // === 同时保存到 Redis 和 MySQL ===
-        saveToken(token, sysUser);
-
-        log.debug("登录信息更新完成 - 用户ID: {}, Token生成成功", sysUser.getId());
         return Result.success(token);
     }
 
     /**
-     * 更新用户登录信息
-     * @param userId 用户ID
+     * 登录成功后更新登录信息
+     * 同时清零失败次数、锁定时间，更新最后登录 IP、时间、update_date
      */
-    public void updateLoginInfo(String userId){
+    public void updateLoginInfo(String userId) {
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
-        String ip= IpUtils.getIpAddr(request);
-        log.debug("更新用户登录信息 - 用户ID: {}, 登录IP: {}", userId, ip);
+        String ip = IpUtils.getIpAddr(request);
+
         SysUser user = new SysUser();
         user.setId(userId);
         user.setLastIpaddr(ip);
         user.setLastLogin(System.currentTimeMillis());
-        this.sysUserService.updateById(user);
-        log.debug("用户登录信息更新完成 - 用户ID: {}", userId);
-    }
+        user.setUpdateDate(System.currentTimeMillis());
+        // 登录成功，清零失败计数和锁定时间
+        user.setLoginFailCount(0);
+        user.setLockTime(null);
 
+        this.sysUserService.updateById(user);
+    }
     /**
      * 校验 Token (包含灾难恢复逻辑)
      */
@@ -222,15 +276,13 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public Result register(LoginParam loginParam) {
 
-        String account = loginParam.getAccount();
+        String account  = loginParam.getAccount();
         String password = loginParam.getPassword();
         String nickname = loginParam.getNickname();
-        Integer sex = loginParam.getSex();
-        String email = loginParam.getEmail();
-        String code = loginParam.getCode();
-        String avatar = loginParam.getAvatar();
-
-        log.info("注册请求开始 - 账号: {}, 邮箱: {}, 昵称: {}", account, email, nickname);
+        Integer sex     = loginParam.getSex();
+        String email    = loginParam.getEmail();
+        String code     = loginParam.getCode();
+        String avatar   = loginParam.getAvatar();
 
         if (StringUtils.isBlank(account)
                 || StringUtils.isBlank(password)
@@ -238,66 +290,59 @@ public class LoginServiceImpl implements LoginService {
                 || StringUtils.isBlank(email)
                 || StringUtils.isBlank(code)
                 || (sex != 0 && sex != 1 && sex != 2)
-        ){
-            log.warn("注册参数校验失败 - 账号: {}, 邮箱: {}, 昵称: {}", account, email, nickname);
-            return Result.fail(ErrorCode.PARAMS_ERROR.getCode(),ErrorCode.PARAMS_ERROR.getMsg());
+        ) {
+            return Result.fail(ErrorCode.PARAMS_ERROR.getCode(), ErrorCode.PARAMS_ERROR.getMsg());
         }
 
+        // 校验邮箱验证码
         String redisCode = redisTemplate.opsForValue().get("REGISTER_CODE_" + email);
         if (StringUtils.isBlank(redisCode)) {
-            log.warn("验证码校验失败 - 邮箱: {}, 原因: 验证码已过期或未获取", email);
             return Result.fail(ErrorCode.PARAMS_ERROR.getCode(), "验证码已过期或未获取");
         }
         if (!redisCode.equals(code)) {
-            log.warn("验证码校验失败 - 邮箱: {}, 输入验证码: {}, 正确验证码: {}", email, code, redisCode);
             return Result.fail(ErrorCode.PARAMS_ERROR.getCode(), "验证码错误");
         }
-        log.debug("验证码校验成功 - 邮箱: {}", email);
 
-        SysUser sysUser = sysUserService.findUserByAccount(account);
-        if (sysUser != null){
-            log.warn("账号已存在 - 账号: {}", account);
-            return Result.fail(ErrorCode.ACCOUNT_EXIST.getCode(),"账户已经被注册了");
+        // 账号唯一性检查
+        SysUser exist = sysUserService.findUserByAccount(account);
+        if (exist != null) {
+            return Result.fail(ErrorCode.ACCOUNT_EXIST.getCode(), "账户已经被注册了");
         }
-        log.debug("账号唯一性校验通过 - 账号: {}", account);
 
-        sysUser = new SysUser();
+        long now = System.currentTimeMillis();
+
+        SysUser sysUser = new SysUser();
         sysUser.setNickname(nickname);
         sysUser.setAccount(account);
         sysUser.setSex(sex);
-        sysUser.setPassword(DigestUtils.md5Hex(password+slat));
-        sysUser.setCreateDate(System.currentTimeMillis());
-        sysUser.setLastLogin(System.currentTimeMillis());
+        sysUser.setPassword(DigestUtils.md5Hex(password + slat));
         sysUser.setAvatar(avatar);
-
+        sysUser.setEmail(email);
         sysUser.setDeleted(0);
         sysUser.setSalt("");
         sysUser.setStatus(0);
-        sysUser.setEmail(email);
-
-        HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
-        String ip= IpUtils.getIpAddr(request);
-
         sysUser.setLastIpaddr("");
 
-        log.debug("准备保存用户信息 - 账号: {}, 邮箱: {}, IP: {}", account, email, ip);
-        // 保存用户
+        // ===== 新增字段 =====
+        sysUser.setSource(1);           // 注册来源：1=账号密码注册
+        sysUser.setCreateDate(now);
+        sysUser.setLastLogin(now);
+        sysUser.setUpdateDate(now);     // 最后更新时间
+        sysUser.setPwdUpdateDate(now);  // 密码设置时间（首次注册即为设密时间）
+        sysUser.setLoginFailCount(0);   // 初始化失败次数为 0
+        // ====================
+
         this.sysUserService.save(sysUser);
-        // 假设数据库里 ID=4 是普通用户角色
+
+        // 分配普通用户角色（id=4）
         sysUserMapper.insertUserRole(sysUser.getId(), 4L);
-        log.info("用户注册成功 - 用户ID: {}, 账号: {}, 邮箱: {}", sysUser.getId(), account, email);
 
-
+        // 删除验证码
         redisTemplate.delete("REGISTER_CODE_" + email);
-        log.debug("验证码删除完成 - 邮箱: {}", email);
 
-        // 6. 自动登录
+        // 自动登录，返回 token
         String token = JWTUtils.createToken(sysUser.getId());
-
-        // === 同时保存到 Redis 和 MySQL ===
         saveToken(token, sysUser);
-
-        log.info("用户自动登录完成 - 用户ID: {}, Token生成成功", sysUser.getId());
 
         return Result.success(token);
     }
