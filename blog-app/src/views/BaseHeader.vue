@@ -41,14 +41,14 @@
                 <div class="uc-menu-item" @click="navTo('/space/' + user.id)">
                   <i class="el-icon-document"></i> <span>我的文章</span>
                 </div>
-                <div class="uc-menu-item" @click="jumpToAdmin"><i class="el-icon-setting"></i> <span>系統設置</span></div><div class="uc-menu-item logout-item" @click="logout"><i class="el-icon-switch-button"></i> <span>登出帳戶</span></div></div><div class="uc-footer-deco"><span>☾</span> LUNA SYSTEM <span>❀</span></div></div></div></transition>
+                <div class="uc-menu-item" @click="jumpToAdmin"><i class="el-icon-setting"></i> <span>系統设置</span></div><div class="uc-menu-item logout-item" @click="logout"><i class="el-icon-switch-button"></i> <span>登出帳戶</span></div></div><div class="uc-footer-deco"><span>☾</span> LUNA SYSTEM <span>❀</span></div></div></div></transition>
             </template>
           </div>
           <div class="mobile-toggle hidden-sm-and-up" @click="toggleMobileMenu"><div class="hamburger" :class="{ 'is-active': isMobileMenuOpen }"><span class="line line-1"></span><span class="line line-2"></span><span class="line line-3"></span></div></div>
         </div>
       </div>
       <transition @enter="enterMobileMenu" @leave="leaveMobileMenu"><div v-show="isMobileMenuOpen" class="mobile-menu-overlay"><div class="menu-bg-moon">☾</div><div class="mobile-menu-content"><div class="mobile-user-section mobile-item"><template v-if="user.login"><div class="m-avatar-box"><el-avatar :size="60" :src="user.avatar || require('@/assets/img/default_avatar.png')" class="luna-avatar"></el-avatar><div class="m-username">貴安, {{ user.nickname }}</div></div><div class="m-auth-actions"><span @click="logoutAndClose">登出帳戶</span></div></template><template v-else><div class="m-login-box"><div class="m-login-btn" @click="navTo('/login')">登入</div><div class="m-register-btn" @click="register">註冊</div></div></template></div><div class="mobile-divider mobile-item"></div><ul class="mobile-nav-list"><li v-for="item in navItems" :key="item.path" class="mobile-nav-item mobile-item" @click="navTo(item.path)"><span class="m-en">{{ item.en }}</span><span class="m-cn">{{ item.name }}</span></li><li v-if="user.login" class="mobile-nav-item mobile-item" @click="navTo('/write')"><span class="m-en">Write</span><span class="m-cn">創作</span></li></ul></div></div></transition>
-      <transition name="luna-modal"><div v-if="showEditModal" class="luna-modal-overlay" @click.self="closeEditModal"><div class="luna-modal-card"><div class="luna-modal-title">修改{{ editFieldMap[editField] }}</div><div class="luna-modal-body"><input type="text" v-model="editValue" class="luna-input" :placeholder="'請輸入' + editFieldMap[editField]" @keyup.enter="confirmEdit"><div v-if="editField === 'email'" class="luna-modal-tip">* 輸入 QQ 郵箱可自動獲取頭像</div></div><div class="luna-modal-footer"><button class="luna-btn-cancel" @click="closeEditModal">取消</button><button class="luna-btn-confirm" @click="confirmEdit">確定</button></div></div></div></transition>
+      <transition name="luna-modal"><div v-if="showEditModal" class="luna-modal-overlay" @click.self="closeEditModal"><div class="luna-modal-card"><div class="luna-modal-title">修改{{ editFieldMap[editField] }}</div><div class="luna-modal-body"><input type="text" v-model="editValue" class="luna-input" :placeholder="'請輸入' + editFieldMap[editField]" @keyup.enter="confirmEdit"><div v-if="editField === 'email'" class="luna-modal-tip">输入 QQ 邮箱可自动获取头像</div></div><div class="luna-modal-footer"><button class="luna-btn-cancel" @click="closeEditModal">取消</button><button class="luna-btn-confirm" @click="confirmEdit">确定</button></div></div></div></transition>
     </div>
 
     <el-dialog
@@ -177,6 +177,21 @@
           </div>
 
           <div class="detail-list">
+
+            <div class="detail-item fixed-height-row">
+              <div class="row-icon"><i :class="getGenderClass(form.sex)"></i></div>
+              <div class="row-content">
+                <template v-if="!isEditing">
+                  <span class="item-text" :class="{ empty: form.sex === undefined }">{{ form.sex === 1 ? '男' : (form.sex === 0 ? '女' : '保密') }}</span>
+                </template>
+                <div v-else class="gender-edit-box">
+                  <label><input type="radio" v-model="form.sex" :value="1"> 男</label>
+                  <label><input type="radio" v-model="form.sex" :value="0"> 女</label>
+                  <label><input type="radio" v-model="form.sex" :value="2"> 保密</label>
+                </div>
+              </div>
+            </div>
+
             <div class="detail-item fixed-height-row">
               <div class="row-icon"><i class="el-icon-mobile-phone"></i></div>
               <div class="row-content">
@@ -184,6 +199,7 @@
                 <input v-else v-model="form.mobilePhoneNumber" class="detail-input" placeholder="请输入手机号">
               </div>
             </div>
+
             <div class="detail-item fixed-height-row">
               <div class="row-icon"><i class="el-icon-message"></i></div>
               <div class="row-content">
@@ -191,6 +207,31 @@
                 <input v-else v-model="form.email" class="detail-input" placeholder="请输入邮箱">
               </div>
             </div>
+
+            <div class="detail-item fixed-height-row">
+              <div class="row-icon"><i class="el-icon-edit-outline"></i></div>
+              <div class="row-content">
+                <template v-if="!isEditing"><span class="item-text" :class="{ empty: !form.bio }">{{ form.bio || '未填写个人简介' }}</span></template>
+                <input v-else v-model="form.bio" class="detail-input" placeholder="一句话介绍自己">
+              </div>
+            </div>
+
+            <div class="detail-item fixed-height-row">
+              <div class="row-icon"><i class="el-icon-link"></i></div>
+              <div class="row-content">
+                <template v-if="!isEditing"><span class="item-text" :class="{ empty: !form.website }">{{ form.website || '未设置个人主页' }}</span></template>
+                <input v-else v-model="form.website" class="detail-input" placeholder="请输入网站链接">
+              </div>
+            </div>
+
+            <div class="detail-item fixed-height-row">
+              <div class="row-icon"><i class="el-icon-date"></i></div>
+              <div class="row-content">
+                <template v-if="!isEditing"><span class="item-text" :class="{ empty: !form.birthday }">{{ form.birthday || '未设置生日' }}</span></template>
+                <input v-else type="date" v-model="form.birthday" class="detail-input">
+              </div>
+            </div>
+
           </div>
 
           <div class="pro-footer fixed-footer">
@@ -221,7 +262,7 @@ export default {
   props: { activeIndex: { type: String, default: '/' } },
   data() {
     return {
-      previewVisible: false, // 控制预览弹窗
+      previewVisible: false,
       isScrolled: false, ticking: false, isMobileMenuOpen: false,
       activePanel: null, guestTab: 'info',
       showEditModal: false, editField: '', editValue: '',
@@ -235,31 +276,19 @@ export default {
         { name: '關於', en: 'Resume', path: '/Resume', icon: 'el-icon-info' },
         { name: '留言', en: 'Guestbook', path: '/messageBoard', icon: 'el-icon-chat-dot-round' }
       ],
-      // 个人中心
       personalInfoVisible: false,
       loading: false,
       isEditing: false,
       uploadFile: null,
-      form: { id: '', account: '', nickname: '', avatar: '', mobilePhoneNumber: '', email: '', sex: 2 },
-      // 裁剪相关
+      // 严格按照 SysUser.java 实体类中的字段进行数据绑定
+      form: { id: '', account: '', nickname: '', avatar: '', mobilePhoneNumber: '', email: '', sex: 2, bio: '', birthday: '', website: '' },
       cropperVisible: false,
       cropperImg: '',
       cropLoading: false,
       option: {
-        size: 1,
-        full: false,
-        outputType: 'png',
-        canMove: true,
-        fixedBox: true,
-        original: false,
-        canMoveBox: true,
-        autoCrop: true,
-        autoCropWidth: 200,
-        autoCropHeight: 200,
-        centerBox: true,
-        high: true
+        size: 1, full: false, outputType: 'png', canMove: true, fixedBox: true, original: false, canMoveBox: true, autoCrop: true, autoCropWidth: 200, autoCropHeight: 200, centerBox: true, high: true
       },
-      previews: {}, //用于存储实时预览数据
+      previews: {},
 
     }
   },
@@ -302,6 +331,7 @@ export default {
     },
     initForm() {
       if (this.userInfo) {
+        // 在此处读取后端存入vuex的数据并绑定 (严格对应 SysUser)
         this.form = {
           id: this.userInfo.id,
           account: this.userInfo.account,
@@ -309,7 +339,10 @@ export default {
           avatar: this.userInfo.avatar,
           mobilePhoneNumber: this.userInfo.mobilePhoneNumber,
           email: this.userInfo.email,
-          sex: this.userInfo.sex !== undefined ? this.userInfo.sex : 2
+          sex: this.userInfo.sex !== undefined ? this.userInfo.sex : 2,
+          bio: this.userInfo.bio || '',
+          website: this.userInfo.website || '',
+          birthday: this.userInfo.birthday || ''
         };
       }
     },
@@ -322,34 +355,25 @@ export default {
       return 'el-icon-lock secret-color';
     },
 
-    // 图片上传流程
     handleAvatarClick() { if (this.isEditing) { this.$refs.avatarInput.click(); } },
     handleFileChange(e) {
       const file = e.target.files[0];
       if (!file) return;
-      // 限制大小
       if (file.size > 2 * 1024 * 1024) { this.$message.warning('图片大小不能超过 5MB'); return; }
-      // ============================================================
-      // GIF 特殊处理逻辑
-      // 如果是 GIF，直接使用原图，跳过裁剪（为了保留动图效果）
-      // ============================================================
       if (file.type === 'image/gif') {
-        this.uploadFile = file; // 直接存入暂存区
-        this.form.avatar = URL.createObjectURL(file); // 直接生成本地预览
-        e.target.value = ''; // 清空 input 防止重复选不触发
+        this.uploadFile = file;
+        this.form.avatar = URL.createObjectURL(file);
+        e.target.value = '';
         this.$message.info('GIF 圖片已自動跳過裁剪以保留動畫效果');
         return;
       }
-      // ============================================================
-      // 其他格式 (JPG/PNG/WEBP)：进入裁剪流程
-      // ============================================================
       const reader = new FileReader();
       reader.onload = (event) => {
         this.cropperImg = event.target.result;
-        this.cropperVisible = true; // 打开裁剪框
+        this.cropperVisible = true;
       };
       reader.readAsDataURL(file);
-      e.target.value = '';// 清空 input
+      e.target.value = '';
     },
     finishCrop() {
       this.cropLoading = true;
@@ -369,31 +393,37 @@ export default {
           const formData = new FormData();
           formData.append('image', this.uploadFile);
           formData.append('path', 'avatar');
-          //await 关键字起到了关键作用，它的意思就是 只有等这一行执行完，拿到结果了，才会继续执行下一行代码。
           const uploadRes = await upload(formData);
           if (uploadRes.success) {
             this.form.avatar = uploadRes.data;
           } else {
-            this.$message.error(uploadRes.msg || '圖片上傳失敗');
+            this.$message.error(uploadRes.msg || '图片上传失败');
             this.loading = false;
             return;
           }
         }
         const updateRes = await updateUser(this.form);
         if (updateRes.success) {
-          this.$message.success('資料已更新');
+          this.$message.success('资料已更新');
           this.isEditing = false;
           this.uploadFile = null;
+
+          // 在这里将所有字段都同步到 vuex store 中
           this.$store.commit('SET_NAME', this.form.nickname);
           this.$store.commit('SET_AVATAR', this.form.avatar);
           this.$store.commit('SET_EMAIL', this.form.email);
           this.$store.commit('SET_MOBILE_PHONE_NUMBER', this.form.mobilePhoneNumber);
+          this.$store.commit('SET_SEX', this.form.sex);
+          this.$store.commit('SET_BIO', this.form.bio);
+          this.$store.commit('SET_WEBSITE', this.form.website);
+          this.$store.commit('SET_BIRTHDAY', this.form.birthday);
+
         } else {
-          this.$message.error(updateRes.msg || '修改失敗');
+          this.$message.error(updateRes.msg || '修改失败');
         }
       } catch (error) {
         console.error(error);
-        this.$message.error('系統異常');
+        this.$message.error('系统异常');
       } finally {
         this.loading = false;
       }
@@ -427,11 +457,9 @@ export default {
       gsap.killTweensOf([enText, cnText, underline]);
 
       if (window.innerWidth <= 1000) {
-        // 小屏幕设备：仅改变中文颜色和激活下划线
         gsap.to(cnText, { color: '#d4af37', duration: 0.3 });
         gsap.to(underline, { width: '100%', opacity: 1, duration: 0.4, ease: 'power2.out' });
       } else {
-        // 大屏幕设备：保留原有的上下浮动动画
         gsap.to(enText, { y: -5, color: '#d4af37', fontWeight: '700', duration: 0.3, ease: 'power2.out' });
         gsap.to(cnText, { y: 2, opacity: 1, color: '#888', duration: 0.3, ease: 'power2.out' });
         gsap.to(underline, { width: '100%', opacity: 1, duration: 0.4, ease: 'power2.out' });
@@ -446,11 +474,9 @@ export default {
       gsap.killTweensOf([enText, cnText, underline]);
 
       if (window.innerWidth <= 1000) {
-        // 小屏幕设备：仅恢复中文颜色和隐藏下划线，绝对不修改透明度
         gsap.to(cnText, { color: '#555', duration: 0.3 });
         gsap.to(underline, { width: '0%', opacity: 0, duration: 0.3 });
       } else {
-        // 大屏幕设备：恢复原来的隐藏逻辑
         gsap.to(enText, { y: 0, color: '#555', fontWeight: '600', duration: 0.3 });
         gsap.to(cnText, { y: 10, opacity: 0, duration: 0.3 });
         gsap.to(underline, { width: '0%', opacity: 0, duration: 0.3 });
@@ -464,36 +490,36 @@ export default {
     navTo(path) {
       console.log(path)
       this.closeAllPanels(); this.$router.push({ path }); this.closeMobileMenu(); },
-    jumpToAdmin() { this.closeAllPanels(); const token = this.$store.state.token; if (!token) { this.$myMessage.error('請先登入'); return; } const adminBaseUrl = APP_CONFIG.adminUrl; getTicket(token).then(res => { if (res.success) { window.open(`${adminBaseUrl}?ticket=${res.data}`, '_blank'); } else { this.$myMessage.error(res.msg || '无法获取跳转凭证'); } }).catch(err => { console.error(err); this.$myMessage.error('跳转失败'); }); },
+    jumpToAdmin() {
+      this.closeAllPanels();
+      const token = this.$store.state.token;
+      if (!token) {
+        this.$myMessage.error('請先登入');
+        return;
+      } const adminBaseUrl = APP_CONFIG.adminUrl; getTicket(token).then(res => { if (res.success) { window.open(`${adminBaseUrl}?ticket=${res.data}`, '_blank'); } else { this.$myMessage.error(res.msg || '无法获取跳转凭证'); } }).catch(err => { console.error(err); }); },
     logoutAndClose() { this.$store.dispatch('logout').then(() => { this.$router.push({path: '/'}); this.closeMobileMenu(); }); },
     logout() { this.closeAllPanels(); this.$store.dispatch('logout').then(() => { this.$router.push({path: '/'}) }) },
     login() { this.closeAllPanels(); this.$router.push({path: '/login'}) },
     register() { this.closeAllPanels(); this.closeMobileMenu(); this.$router.push({ path: '/register' }) },
     enterMobileMenu(el, done) { gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.4 }); const items = el.querySelectorAll('.mobile-item'); gsap.fromTo(items, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.05, ease: "power2.out", onComplete: done }); gsap.fromTo(el.querySelector('.menu-bg-moon'), { rotation: -30, opacity: 0, scale: 0.8 }, { rotation: 0, opacity: 0.1, scale: 1, duration: 1, ease: "power2.out" }); },
     leaveMobileMenu(el, done) { gsap.to(el, { opacity: 0, duration: 0.3, onComplete: done }); },
-    // 统一处理头像点击动作
     handleAvatarAction() {
       if (this.isEditing) {
-        // 编辑模式：触发文件选择
         this.$refs.avatarInput.click();
       } else {
-        // 查看模式：打开预览大图
         this.previewVisible = true;
       }
     },
-  // vue-cropper 的实时预览回调
     realTime(data) {
       this.previews = data;
     },
-    // 计算预览区的缩放样式
-    // 因为 vue-cropper 返回的 div 大小是基于截图框的，我们需要把它缩放到 100px 或 50px
     getPreviewScaleStyle(targetSize) {
       if (!this.previews.w) return {};
       const scale = targetSize / this.previews.w;
       return {
         width: this.previews.w + "px",
         height: this.previews.h + "px",
-        transform: `scale(${scale})`, // 关键：通过 scale 缩放
+        transform: `scale(${scale})`,
         transformOrigin: "top left",
         position: "relative"
       };
@@ -504,21 +530,17 @@ export default {
 </script>
 
 <style>
-/* 弹窗重置 */
 .luna-profile-dialog { background: transparent !important; box-shadow: none !important; border-radius: 16px; }
 .luna-profile-dialog .el-dialog__header { display: none; }
 .luna-profile-dialog .el-dialog__body { padding: 0 !important; }
 
-/* 关键修复：响应式弹窗宽度 */
 @media (max-width: 768px) {
   .luna-profile-dialog { width: 90% !important; margin-top: 5vh !important; }
   .cropper-dialog { width: 95% !important; }
 }
 
-/* 关键修复：阻止 preventDefault 报错 */
 .cropper-box { width: 100%; height: 300px; margin-bottom: 20px; touch-action: none; }
 
-/* Popover */
 .gender-popper { padding: 5px 0 !important; min-width: 100px !important; border-radius: 8px !important; border: 1px solid #eee !important; box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; }
 .gender-options { display: flex; flex-direction: column; }
 .g-opt { padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; color: #555; transition: background 0.2s; }
@@ -529,7 +551,6 @@ export default {
 </style>
 
 <style scoped>
-/* 继承旧样式 */
 ul { list-style: none; margin: 0; padding: 0; }
 a { text-decoration: none; }
 .header-wrapper { position: fixed; top: 0; left: 0; right: 0; margin: 0 auto; z-index: 2000; background: rgba(255, 250, 245, 0.8); backdrop-filter: blur(10px); will-change: width, top, border-radius, background; font-family: 'Noto Serif SC', 'Playfair Display', serif; }
@@ -659,15 +680,12 @@ a { text-decoration: none; }
 .luna-modal-leave-active .luna-modal-card { animation: modalPop 0.3s reverse; }
 @keyframes modalPop { 0% { opacity: 0; transform: scale(0.8) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 
-/* ================== 个人中心 CSS (终极防抖版) ================== */
-
 /* 1. 卡片主体 */
 .luna-profile-card-pro {
   background: #fff; border-radius: 16px; overflow: hidden; position: relative;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-  /* 统一字体，防止渲染差异 */
   font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
-  min-height: 520px; /* 设定最小高度，防止高度塌陷 */
+  min-height: 520px;
 }
 
 /* 2. 封面区域 */
@@ -680,7 +698,7 @@ a { text-decoration: none; }
 /* 3. 信息容器 */
 .pro-info-container { padding: 0 25px 25px; position: relative; margin-top: -45px; }
 
-/* 头像 & 相机图标 */
+/* 头像 */
 .pro-avatar-box { position: relative; width: 84px; height: 84px; border-radius: 50%; border: 4px solid #fff; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 10px; }
 .pro-avatar-camera {
   position: absolute; bottom: 0; right: 0;
@@ -694,11 +712,11 @@ a { text-decoration: none; }
 }
 .pro-avatar-camera:hover { transform: scale(1.1); }
 
-/* 身份信息 (固定高度容器，Flex布局保证对齐) */
+/* 身份信息 */
 .pro-identity { margin-bottom: 20px; }
 .name-row {
   display: flex; align-items: center; justify-content: center;
-  height: 40px; /* 强制高度，无论内容是文字还是输入框 */
+  height: 40px;
   margin-bottom: 5px;
 }
 .name-wrapper {
@@ -706,24 +724,20 @@ a { text-decoration: none; }
   height: 100%;
 }
 
-
-/* 昵称文本 */
 .pro-name {
   font-size: 22px; font-weight: 700; color: #333;
-  line-height: 1; /* 紧凑行高 */
+  line-height: 1;
 }
-/* 昵称输入框 (去默认样式，模拟纯文本高度) */
 .name-input {
   font-size: 22px; font-weight: 700; color: #333;
   text-align: center; border: none; border-bottom: 2px solid #d4af37;
   width: 140px; outline: none; padding: 0; margin: 0;
   background: transparent;
-  height: 30px; /* 留足空间 */
+  height: 30px;
   line-height: 30px;
 }
 .pro-uid { font-size: 12px; color: #ccc; margin-bottom: 8px; font-family: monospace; text-align: center; }
 
-/* 性别图标 */
 .sex-icon { padding: 4px; border-radius: 50%; font-size: 14px; transition: all 0.3s; display: block; }
 .sex-icon.pointer { cursor: pointer; }
 .sex-icon.pointer:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -738,10 +752,24 @@ a { text-decoration: none; }
 .stat-num { font-size: 16px; font-weight: 700; color: #333; }
 .stat-label { font-size: 11px; color: #999; margin-top: 2px; }
 
-/* 详细信息列表 (每一行必须有固定高度) */
-.detail-list { margin-bottom: 30px; padding: 0 10px; }
+/* 详细信息列表，增加高度和滚动条限制，防止超出屏幕 */
+.detail-list {
+  margin-bottom: 30px;
+  padding: 0 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+/* 优化滚动条样式 */
+.detail-list::-webkit-scrollbar {
+  width: 4px;
+}
+.detail-list::-webkit-scrollbar-thumb {
+  background: #e0d0b0;
+  border-radius: 4px;
+}
+
 .fixed-height-row {
-  height: 50px; /* 强制行高，防止切换input时高度变化 */
+  height: 50px;
   display: flex; align-items: center;
   border-bottom: 1px dashed #f0f0f0;
   box-sizing: border-box;
@@ -759,7 +787,6 @@ a { text-decoration: none; }
 }
 .item-text.empty { color: #ccc; font-style: italic; }
 
-/* 详情输入框 (完全撑满行，去掉边框) */
 .detail-input {
   border: none; border-bottom: 1px solid transparent;
   outline: none; font-size: 14px; color: #333;
@@ -769,8 +796,23 @@ a { text-decoration: none; }
 }
 .detail-input:focus { border-bottom-color: #d4af37; }
 
-/* 底部按钮 (固定容器高度) */
-.pro-footer { text-align: center; height: 50px; /* 预留按钮高度 */ display: flex; align-items: center; justify-content: center; }
+/* 性别单选编辑区 */
+.gender-edit-box {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  font-size: 14px;
+  color: #555;
+}
+.gender-edit-box label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 底部按钮 */
+.pro-footer { text-align: center; height: 50px; display: flex; align-items: center; justify-content: center; }
 .pro-btn-outline { width: 80%; padding: 10px 0; border-radius: 20px; border: 1px solid #d4af37; background: #fff; color: #d4af37; font-weight: 600; cursor: pointer; transition: all 0.3s; }
 .pro-btn-outline:hover { background: #d4af37; color: #fff; }
 .action-btns { display: flex; gap: 15px; justify-content: center; width: 100%; }
@@ -778,7 +820,6 @@ a { text-decoration: none; }
 .pro-btn-ghost:hover { border-color: #999; color: #333; }
 .pro-btn-save { padding: 8px 40px; border-radius: 20px; border: none; background: linear-gradient(90deg, #d4af37, #f6d365); color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3); }
 
-/* 媒体查询 */
 @media (max-width: 768px) {
   .header-content { padding: 0 20px; }
   .hidden-xs-only { display: none !important; }
@@ -799,14 +840,12 @@ a { text-decoration: none; }
   .nav-item.active .nav-text-cn { color: #d4af37 !important; font-weight: 700; }
   .nav-item { height: 60px; justify-content: center; }
 }
-/* 布局容器 */
 .bili-cropper-layout {
   display: flex;
-  height: 360px; /* 固定高度 */
+  height: 360px;
   gap: 30px;
 }
 
-/* 左侧裁剪区 */
 .cropper-left {
   flex: 1;
   display: flex;
@@ -825,7 +864,6 @@ a { text-decoration: none; }
   color: #999;
 }
 
-/* 右侧预览区 */
 .cropper-right {
   width: 200px;
   background: #f9f9f9;
@@ -856,16 +894,14 @@ a { text-decoration: none; }
   margin-bottom: 20px;
 }
 
-/* 圆形预览容器 */
 .preview-circle-box {
-  border-radius: 50%; /* 强制圆形 */
-  overflow: hidden;   /* 裁剪超出部分 */
+  border-radius: 50%;
+  overflow: hidden;
   border: 2px solid #fff;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  background: #fff; /* 避免透明背景 */
+  background: #fff;
 }
 
-/* 固定预览容器大小 */
 .preview-circle-box.big {
   width: 100px;
   height: 100px;
@@ -882,10 +918,7 @@ a { text-decoration: none; }
 }
 </style>
 
-/* ================= 全局样式 (必须放在不带 scoped 的 style 标签中) ================= */
 <style>
-
-/* 1. 个人中心弹窗样式重置 */
 .luna-profile-dialog {
   background: transparent !important;
   box-shadow: none !important;
@@ -894,11 +927,10 @@ a { text-decoration: none; }
 .luna-profile-dialog .el-dialog__header { display: none; }
 .luna-profile-dialog .el-dialog__body { padding: 0 !important; }
 
-/* 确保弹窗 body 没有任何内边距，方便布局 */
 .bili-cropper-dialog .el-dialog__body {
   padding: 20px 30px !important;
 }
-/* [修复] 裁剪区域容器 */
+
 .cropper-content {
   display: flex;
   flex-direction: column;
@@ -907,20 +939,16 @@ a { text-decoration: none; }
 
 .cropper-box {
   width: 100%;
-  height: 400px; /* PC端高度 */
+  height: 400px;
   margin-bottom: 20px;
-  /* 关键：给盒子加红色边框测试是否生效 (调试用，确认没问题后可删) */
-  /* border: 1px solid red; */
 }
 
-/* [核心修复] 暴力禁止裁剪框内所有元素的默认触摸/滚动行为 */
 .cropper-box,
 .cropper-box * {
   touch-action: none !important;
   user-select: none !important;
 }
 
-/* ================= 响应式适配 (保持不变) ================= */
 @media (max-width: 768px) {
   .luna-profile-dialog {
     width: 95% !important;
@@ -933,14 +961,13 @@ a { text-decoration: none; }
   }
 
   .cropper-box {
-    height: 300px; /* 手机端高度减小 */
+    height: 300px;
   }
 
   .luna-profile-card-pro {
     min-height: auto;
   }
 }
-/* Popover 样式 */
 .gender-popper {
   padding: 5px 0 !important;
   min-width: 100px !important;
@@ -958,7 +985,6 @@ a { text-decoration: none; }
 .g-opt.female i { color: #F56C6C; }
 .g-opt.secret i { color: #909399; }
 
-/* 右下角悬浮操作钮 (相机 or 放大镜) */
 .pro-avatar-action {
   position: absolute; bottom: 0; right: 0;
   width: 28px; height: 28px;
@@ -968,16 +994,10 @@ a { text-decoration: none; }
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   transition: all 0.3s;
   z-index: 10;
-
-  /* 默认透明度0 (隐藏)，鼠标放上去才显示，或者编辑模式下常驻 */
   opacity: 0;
   transform: scale(0.8);
 }
 
-/* 两种情况下显示图标：
-   1. 鼠标悬停在头像盒子上 (.pro-avatar-box:hover)
-   2. 处于编辑模式时 (.is-editing) -> 如果想编辑模式常亮，加上这个类判断
-*/
 .pro-avatar-box:hover .pro-avatar-action,
 .is-editing .pro-avatar-action {
   opacity: 1;
@@ -989,24 +1009,18 @@ a { text-decoration: none; }
   background: #c5a028;
 }
 
-/* ================== 预览弹窗专用样式 ================== */
-
-/* 1. 弹窗本体去背景、去阴影 */
 .avatar-preview-dialog {
   background: transparent !important;
   box-shadow: none !important;
-  /* 居中显示 */
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* 2. 隐藏头部 (那个 X 号和标题) */
 .avatar-preview-dialog .el-dialog__header {
   display: none;
 }
 
-/* 3. 内容区去内边距 */
 .avatar-preview-dialog .el-dialog__body {
   padding: 0 !important;
   background: transparent !important;
@@ -1015,17 +1029,16 @@ a { text-decoration: none; }
   justify-content: center;
 }
 
-/* 4. 图片样式 */
 .preview-img {
   width: 100%;
-  max-width: 350px; /* 限制最大宽度 */
-  border-radius: 8px; /* 圆角 */
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* 图片加个阴影更立体 */
-  cursor: zoom-out; /* 鼠标变成缩小图标 */
+  max-width: 350px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  cursor: zoom-out;
   transition: transform 0.3s;
 }
 .preview-img:hover {
-  transform: scale(1.02); /* 悬停微微放大 */
+  transform: scale(1.02);
 }
 
 </style>

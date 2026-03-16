@@ -34,6 +34,10 @@
         <el-icon><Folder /></el-icon>
         <span>分類管理</span>
       </el-menu-item>
+      <el-menu-item index="/comment/index">
+        <el-icon><ChatDotRound /></el-icon>
+        <span>評論管理</span>
+      </el-menu-item>
     </el-sub-menu>
 
     <el-sub-menu index="operation">
@@ -41,13 +45,9 @@
         <el-icon><Operation /></el-icon>
         <span>運營管理</span>
       </template>
-      <el-menu-item index="/comment/index">
-        <el-icon><ChatDotRound /></el-icon>
-        <span>評論管理</span>
-      </el-menu-item>
       <el-menu-item index="/link/index">
         <el-icon><Link /></el-icon>
-        <span>友鏈管理</span>
+        <span>网站管理</span>
       </el-menu-item>
     </el-sub-menu>
 
@@ -87,15 +87,20 @@
         <el-icon><Warning /></el-icon>
         <span>IP 黑名單</span>
       </el-menu-item>
-
-      <el-menu-item index="/system/log">
-        <el-icon><DataLine /></el-icon>
-        <span>操作日誌</span>
-      </el-menu-item>
-      <el-menu-item index="/system/loginLog">
-        <el-icon><DataLine /></el-icon>
-        <span>登入日志</span>
-      </el-menu-item>
+      <el-sub-menu index="log">
+        <template #title>
+          <el-icon><Tickets /></el-icon>
+          <span>日誌管理</span>
+        </template>
+        <el-menu-item index="/system/log">
+          <el-icon><DataLine /></el-icon>
+          <span>操作日誌</span>
+        </el-menu-item>
+        <el-menu-item index="/system/loginLog">
+          <el-icon><DataLine /></el-icon>
+          <span>登入日志</span>
+        </el-menu-item>
+      </el-sub-menu>
     </el-sub-menu>
 
       <el-menu-item index="/system/task">
@@ -113,7 +118,7 @@ import {
   Odometer, Document, Edit, List, Folder,
   Operation, ChatDotRound, Link,
   User, UserFilled,
-  Setting, Warning, DataLine, Picture, Refresh, Timer
+  Setting, Warning, DataLine, Picture, Refresh, Timer,Tickets
 } from '@element-plus/icons-vue'
 
 const route = useRoute()

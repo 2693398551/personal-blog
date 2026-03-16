@@ -85,6 +85,7 @@ public class LoginController {
             return Result.fail(ErrorCode.NO_LOGIN.getCode(), "未登录");
         }
 
+
         // 2.去数据库查该用户的权限列表
         // 既然没有 字段，那就看他有没有分配过权限。
         // 如果 permissions 为空，说明他是普通用户，不能进后台。
