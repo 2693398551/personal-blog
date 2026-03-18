@@ -17,7 +17,16 @@
         </el-table-column>
         <el-table-column prop="beanName" label="调用目标 (Bean)" width="180" />
 
-        <el-table-column prop="taskParam" label="执行参数" show-overflow-tooltip min-width="120" />
+        <el-table-column label="执行参数" show-overflow-tooltip min-width="120">
+          <template #default="scope">
+            <span v-if="scope.row.needParam === 0" style="color: #909399; font-size: 13px;">
+              [无需参数]
+            </span>
+            <span v-else>
+              {{ scope.row.taskParam }}
+            </span>
+          </template>
+        </el-table-column>
 
         <el-table-column label="Cron 表达式" width="220">
           <template #default="scope">
@@ -84,7 +93,6 @@ import cronstrue from 'cronstrue/i18n'
 const loading = ref(false)
 const taskList = ref([])
 
-// 翻译 Cron 表达式的函数
 const translateCron = (cron: string) => {
   if (!cron) return ''
   try {
@@ -94,24 +102,22 @@ const translateCron = (cron: string) => {
   }
 }
 
-// 日志弹窗相关
 const logVisible = ref(false)
 const logLoading = ref(false)
 const logList = ref([])
 
-// 时间格式化
 const formatTime = (time: number) => {
   if (!time) return ''
   return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
 }
 
-// 初始化获取任务列表
 const fetchTaskList = async () => {
   loading.value = true
   try {
     const res: any = await getTaskList({ page: 1, pageSize: 100 })
     if (res.data.success) {
       taskList.value = res.data.data.records
+      console.log(taskList.value)
     }
   } catch (error) {
     console.error('获取任务列表失败', error)
@@ -120,7 +126,6 @@ const fetchTaskList = async () => {
   }
 }
 
-// 启停任务开关
 const handleStatusChange = async (row: any) => {
   const text = row.status === 1 ? '启动' : '暂停'
   try {
@@ -137,7 +142,6 @@ const handleStatusChange = async (row: any) => {
   }
 }
 
-// 针对不同任务的专属参数提示字典
 const paramHints: Record<string, string> = {
   'logCleanTask': '输入示例：30 <br/>(代表清理 30 天前的日志，只能输入纯数字)',
   'contentAuditTask': '输入示例：10 <br/>(代表扫描过去 10 分钟的新评论，只能输入纯数字)',
@@ -146,89 +150,118 @@ const paramHints: Record<string, string> = {
   'viewCountSyncTask': '输入示例：{"articleId": "123456"} <br/>(JSON格式，代表只精准同步这一篇文章的浏览量)'
 }
 
-// 手动执行一次：包含前端预校验与异步预期管理
 const handleRunOnce = (row: any) => {
-  const specificHint = paramHints[row.beanName] || '如果该任务支持传参，请按照后端设定的格式输入。'
+  // 根据数据库返回的 needParam 判断
+  const isParamNeeded = row.needParam !== 0;
 
-  const promptHtml = `
-    <div style="font-size: 13px; color: #606266; line-height: 1.6; margin-bottom: 10px; padding: 10px; background: #f4f4f5; border-radius: 4px;">
-      <div style="margin-bottom: 5px;">【任务说明】：${row.remark || '暂无说明'}</div>
-      <div style="color: #e6a23c;">
-        【参数提示】：<br/>
-        ${specificHint}<br/>
-        <span style="color: #909399; font-size: 12px;">注：留空则按无参默认逻辑执行。默认已填入数据库配置。</span>
+  if (isParamNeeded) {
+    const specificHint = paramHints[row.beanName] || '如果该任务支持传参，请按照后端设定的格式输入。'
+    const promptHtml = `
+      <div style="font-size: 13px; color: #606266; line-height: 1.6; margin-bottom: 10px; padding: 10px; background: #f4f4f5; border-radius: 4px;">
+        <div style="margin-bottom: 5px;">【任务说明】：${row.remark || '暂无说明'}</div>
+        <div style="color: #e6a23c;">
+          【参数提示】：<br/>
+          ${specificHint}<br/>
+          <span style="color: #909399; font-size: 12px;">注：留空则按默认配置执行。</span>
+        </div>
       </div>
-    </div>
-    <div style="margin-bottom: 8px;">请输入本次执行的动态参数：</div>
-  `;
+      <div style="margin-bottom: 8px;">请输入本次执行的动态参数：</div>
+    `;
 
-  ElMessageBox.prompt(promptHtml, `手动执行任务：${row.taskName}`, {
-    dangerouslyUseHTMLString: true,
-    confirmButtonText: '立即下发',
-    cancelButtonText: '取消',
-    inputValue: row.taskParam || '',
-    inputType: 'textarea',
-    inputPlaceholder: '留空则执行无参方法',
-    beforeClose: async (action, instance, done) => {
-      if (action === 'confirm') {
-        const inputValue = instance.inputValue || '';
-        const trimmedValue = inputValue.trim();
+    ElMessageBox.prompt(promptHtml, `手动执行任务：${row.taskName}`, {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '立即下发',
+      cancelButtonText: '取消',
+      inputValue: row.taskParam || '',
+      inputType: 'textarea',
+      inputPlaceholder: '请输入参数',
+      beforeClose: async (action, instance, done) => {
+        if (action === 'confirm') {
+          const inputValue = instance.inputValue || '';
+          const trimmedValue = inputValue.trim();
 
-        // 1. 前端拦截防线：校验格式
-        if (trimmedValue) {
-          // 规则 A：校验 JSON 格式
-          if (trimmedValue.startsWith('{') || trimmedValue.startsWith('[')) {
-            try {
-              JSON.parse(trimmedValue);
-            } catch (err) {
-              ElMessage.error('前端拦截：参数格式错误，请输入合法的 JSON 格式！');
-              return; // 拦截，不关闭弹窗
+          if (trimmedValue) {
+            if (trimmedValue.startsWith('{') || trimmedValue.startsWith('[')) {
+              try { JSON.parse(trimmedValue); } catch (err) {
+                ElMessage.error('前端拦截：参数格式错误，请输入合法的 JSON 格式！');
+                return;
+              }
+            }
+            const numberTasks = ['logCleanTask', 'contentAuditTask'];
+            if (numberTasks.includes(row.beanName) && isNaN(Number(trimmedValue))) {
+              ElMessage.error('前端拦截：该任务参数必须为纯数字！');
+              return;
             }
           }
 
-          // 规则 B：校验纯数字格式
-          const numberTasks = ['logCleanTask', 'contentAuditTask'];
-          if (numberTasks.includes(row.beanName) && isNaN(Number(trimmedValue))) {
-            ElMessage.error('前端拦截：该任务参数必须为纯数字！');
-            return; // 拦截，不关闭弹窗
+          instance.confirmButtonLoading = true;
+          instance.confirmButtonText = '指令下发中...';
+
+          try {
+            const runParams = { id: row.id, taskParam: trimmedValue }
+            const res: any = await runTaskOnce(runParams)
+
+            if (res.data.success) {
+              ElMessage.success(`任务 [${row.taskName}] 的指令已成功下发！请点击【调度日志】查看结果。`)
+              done();
+            } else {
+              ElMessage.error(res.data.msg || '指令下发失败')
+            }
+          } catch (e: any) {
+            ElMessage.error(`错误：${e.response?.data?.msg || e.message || '系统异常'}`)
+          } finally {
+            instance.confirmButtonLoading = false;
+            instance.confirmButtonText = '立即下发';
           }
+        } else {
+          done();
         }
-
-        // 2. 校验通过，开始转圈圈
-        instance.confirmButtonLoading = true;
-        instance.confirmButtonText = '指令下发中...';
-
-        try {
-          const runParams = {
-            id: row.id,
-            taskParam: trimmedValue
-          }
-          const res: any = await runTaskOnce(runParams)
-
-          if (res.data.success) {
-            // 预期管理提示：告诉用户去日志里看结果
-            ElMessage.success(`任务 [${row.taskName}] 的指令已成功下发至后台线程池！请稍后点击【调度日志】查看最终执行结果。`)
-            done();
-          } else {
-            ElMessage.error(res.data.msg || '指令下发失败')
-          }
-        } catch (e: any) {
-          const errorMsg = e.response?.data?.msg || e.message || '系统异常，下发失败'
-          ElMessage.error(`错误：${errorMsg}`)
-        } finally {
-          instance.confirmButtonLoading = false;
-          instance.confirmButtonText = '立即下发';
-        }
-      } else {
-        done(); // 取消按钮直接关闭
       }
-    }
-  }).catch(() => {
-    ElMessage.info('已取消执行')
-  })
+    }).catch(() => { ElMessage.info('已取消执行') })
+
+  } else {
+    // 无需参数的任务，直接出确认框
+    const confirmHtml = `
+      <div style="font-size: 14px; line-height: 1.5;">
+        确定要立即执行 <span style="font-weight: bold;">${row.taskName}</span> 吗？<br/>
+        <span style="color: #909399; font-size: 12px;">此任务设定为无需任何参数。</span>
+      </div>
+    `;
+
+    ElMessageBox.confirm(confirmHtml, '手动执行任务', {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '立即下发',
+      cancelButtonText: '取消',
+      type: 'warning',
+      beforeClose: async (action, instance, done) => {
+        if (action === 'confirm') {
+          instance.confirmButtonLoading = true;
+          instance.confirmButtonText = '指令下发中...';
+
+          try {
+            const runParams = { id: row.id, taskParam: '' }
+            const res: any = await runTaskOnce(runParams)
+
+            if (res.data.success) {
+              ElMessage.success(`无参任务 [${row.taskName}] 的指令已成功下发！`)
+              done();
+            } else {
+              ElMessage.error(res.data.msg || '指令下发失败')
+            }
+          } catch (e: any) {
+            ElMessage.error(`错误：${e.response?.data?.msg || e.message || '系统异常'}`)
+          } finally {
+            instance.confirmButtonLoading = false;
+            instance.confirmButtonText = '立即下发';
+          }
+        } else {
+          done();
+        }
+      }
+    }).catch(() => { ElMessage.info('已取消执行') })
+  }
 }
 
-// 查看调度日志
 const showTaskLog = async (row: any) => {
   logVisible.value = true
   logLoading.value = true

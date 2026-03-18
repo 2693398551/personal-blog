@@ -21,4 +21,5 @@ public class SysTask {
     private String remark;
     private Long createDate;
     private String taskParam;//支持动态执行参数
+    private Integer needParam;//是否需要参数 0-不需要 1-需要
 }
