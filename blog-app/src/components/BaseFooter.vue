@@ -16,7 +16,7 @@
       <div class="legal-info">
         <a href="https://beian.miit.gov.cn/" target="_blank" class="icp-link">
           <img src="@/assets/img/beian.png" class="beian-icon" />
-          <span>湘ICP备2022004529号</span>
+          <span>{{ $store.state.webInfo.icpRecord }}</span>
         </a>
       </div>
     </div>

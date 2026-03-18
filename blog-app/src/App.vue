@@ -25,6 +25,8 @@ export default {
     // 页面一加载，立刻执行 INIT_GUEST
     // 如果 LocalStorage 里有数据，Vuex 就会立刻被填满
     this.$store.commit('INIT_GUEST');
+    // 网站初始化时获取全局配置信息
+    this.$store.dispatch('getWebInfo')
 
   },
   mounted(){

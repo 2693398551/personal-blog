@@ -83,6 +83,12 @@ const routes: Array<RouteRecordRaw> = [
                 component: () => import('../views/system/task.vue'),
                 meta: { title: '任务管理' }
             },
+            // === 网站全局配置 ===
+            {
+                path: 'system/webInfo',
+                component: () => import('../views/system/webInfo.vue'),
+                meta: { title: '网站全局配置' }
+            },
             // === 智能助手 ===
             {
                 path: 'ai/chat',

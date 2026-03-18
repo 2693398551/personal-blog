@@ -87,6 +87,12 @@
         <el-icon><Warning /></el-icon>
         <span>IP 黑名單</span>
       </el-menu-item>
+      <!-- === 网站全局配置 === -->
+      <el-menu-item index="/system/webInfo">
+        <el-icon><Setting /></el-icon>
+        <span>网站全局配置</span>
+      </el-menu-item>
+      <!-- === 日誌管理 === -->
       <el-sub-menu index="log">
         <template #title>
           <el-icon><Tickets /></el-icon>

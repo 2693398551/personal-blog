@@ -41,6 +41,8 @@ public class LoginController {
     public Result login(@RequestBody LoginParam loginParam, HttpServletRequest request) {
         HttpServletRequest req = HttpContextUtils.getHttpServletRequest();
         String ip = IpUtils.getIpAddr(req);
+        // 【关键修复】在主线程提前获取 User-Agent 字符串
+        String userAgent = request.getHeader("User-Agent");
         String account = loginParam.getAccount();
 
         log.info("登录请求开始 - IP: {}, 账号: {}", ip, account);
@@ -50,23 +52,25 @@ public class LoginController {
 
             if (result.isSuccess()) {
                 log.info("登录成功 - IP: {}, 账号: {}", ip, account);
-                // 异步记录登录成功日志（userId 从 token 解析，这里直接查一次用户）
-                // LoginService.login 成功时返回的 data 是 token 字符串
-                // 用账号查一下 userId
                 com.myo.blog.dao.pojo.SysUser user = loginService.checkToken((String) result.getData());
                 String userId = user != null ? user.getId() : null;
-                loginLogService.record(request, userId, account, 1, null);
+
+                // 将 request 替换为提前获取的 ip 和 userAgent
+                loginLogService.record(ip, userAgent, userId, account, 1, null);
             } else {
                 log.warn("登录失败 - IP: {}, 账号: {}, 错误码: {}, 错误信息: {}",
                         ip, account, result.getCode(), result.getMsg());
-                // 异步记录登录失败日志
-                loginLogService.record(request, null, account, 0, result.getMsg());
+
+                // 将 request 替换为提前获取的 ip 和 userAgent
+                loginLogService.record(ip, userAgent, null, account, 0, result.getMsg());
             }
 
             return result;
         } catch (Exception e) {
             log.error("登录异常 - IP: {}, 账号: {}, 异常信息: {}", ip, account, e.getMessage(), e);
-            loginLogService.record(request, null, account, 0, "系统异常");
+
+            // 将 request 替换为提前获取的 ip 和 userAgent
+            loginLogService.record(ip, userAgent, null, account, 0, "系统异常");
             return Result.fail(500, "系统异常，请稍后重试");
         }
     }

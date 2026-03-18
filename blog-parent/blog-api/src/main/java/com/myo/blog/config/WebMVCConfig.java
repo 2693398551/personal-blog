@@ -3,6 +3,7 @@ package com.myo.blog.config;
 import com.myo.blog.handler.AdminInterceptor;
 import com.myo.blog.handler.IpBlackListInterceptor;
 import com.myo.blog.handler.AuthInterceptor;
+import com.myo.blog.handler.VisitLogInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -25,9 +26,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebMVCConfig implements WebMvcConfigurer {
 
-    private final AuthInterceptor authInterceptor;
-    private final IpBlackListInterceptor ipBlackListInterceptor;
-    private final AdminInterceptor adminInterceptor;
+    private final AuthInterceptor authInterceptor;// 身份认证拦截器
+
+    private final IpBlackListInterceptor ipBlackListInterceptor;// IP 黑名单拦截器
+
+    private final AdminInterceptor adminInterceptor;// 管理员权限拦截器
+
+     private final VisitLogInterceptor visitLogInterceptor; // 流量拦截器
 
     /**
      * 跨域资源共享（CORS）配置
@@ -62,8 +67,18 @@ public class WebMVCConfig implements WebMvcConfigurer {
         registry.addInterceptor(ipBlackListInterceptor)
                 .addPathPatterns("/**");// 对所有路径应用 IP 黑名单拦截
 
+        // 流量采集防线：记录真实访客流量（放在黑名单之后，这样恶意IP就不会污染大屏数据）
+        registry.addInterceptor(visitLogInterceptor)
+                .addPathPatterns("/articles", "/articles/**") // 拦截文章列表及详情的访问
+                .addPathPatterns("/categorys", "/categorys/**") // 拦截分类数据的访问
+                .addPathPatterns("/tags", "/tags/**") // 拦截标签数据的访问
+                .addPathPatterns("/comments/article/**") // 拦截评论数据的读取
+                .excludePathPatterns("/admin/**"); // 重点：排除后台管理端，防止管理员后台操作时产生虚假流量
+
         // 第二道防线：登录鉴权与上下文挂载
+        // 前台接口拦截器：校验登录状态，挂载用户上下文
         registry.addInterceptor(authInterceptor)
+
                 // --- 必须登录才能访问的私有区域 ---
                 .addPathPatterns("/test")
                 .addPathPatterns("/comments/create/change")
@@ -74,8 +89,8 @@ public class WebMVCConfig implements WebMvcConfigurer {
                 .addPathPatterns("/admin/**")
                 .addPathPatterns("/login/ticket")
                 // 【注意】：如果有 /categorys/create 这种写操作，必须先把大区锁住
-                 .addPathPatterns("/categorys/**")
-                 .addPathPatterns("/tags/**")
+                 //.addPathPatterns("/categorys/**")
+                 //.addPathPatterns("/tags/**")
 
                 // --- 无需登录即可访问的公共展示区域 ---
                 // 【提示】：只有上方 addPathPatterns 锁定过的大区，才需要在这里开特批。

@@ -1,6 +1,9 @@
 package com.myo.blog.entity;
 
 import lombok.Data;
+
+import java.time.LocalDate;
+
 //作用：用于前端展示用户公开信息
 @Data
 public class UserVo {
@@ -18,5 +21,16 @@ public class UserVo {
     private Integer sex;//性别 0未知 1男 2女
 
     private String mobilePhoneNumber;//手机号
+
+    /** 个人简介 */
+    private String bio;
+
+    /** 生日 */
+    private LocalDate birthday;
+
+    /** 个人主页 */
+    private String website;
+
+
 
 }

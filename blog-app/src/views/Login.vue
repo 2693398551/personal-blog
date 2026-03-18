@@ -1,13 +1,10 @@
 <template>
   <div class="auth-root" v-title :data-title="isRegister ? '月之别邸 · 缔结' : '月之别邸 · 归来'">
-
     <!-- 背景 -->
     <div class="bg"></div>
-
     <!-- 卡片容器（翻转轴） -->
     <div class="card-scene">
       <div class="card" :class="{ flipped: isRegister }">
-
         <!-- ===== 正面：登录 ===== -->
         <div class="card-face card-front">
           <div class="card-inner">
@@ -31,7 +28,6 @@
               <div class="fl-bar"></div>
               <div class="fl-err"><span v-if="loginErr.password">{{ loginErr.password }}</span></div>
             </div>
-
             <!-- 图形验证码 -->
             <div class="captcha-row">
               <div class="fl-wrap captcha-input-wrap">
@@ -57,7 +53,6 @@
             </p>
           </div>
         </div>
-
         <!-- ===== 背面：注册 ===== -->
         <div class="card-face card-back">
           <div class="card-inner card-inner-reg">
@@ -67,83 +62,89 @@
               <h2 class="card-title">缔结契约</h2>
             </div>
 
-            <input type="file" ref="avatarInput" accept="image/*"
-                   style="display:none" @change="handleFileChange" />
-
-            <!-- 头像 -->
-            <div class="av-row" @click="$refs.avatarInput.click()">
-              <div class="av-circle">
-                <el-avatar :size="44" :src="avatarPreviewUrl">
-                  <span style="font-size:18px;color:#bbb">✦</span>
-                </el-avatar>
-                <div class="av-hover">📷</div>
-              </div>
-              <div class="av-text">
-                <span class="av-main">{{ avatarPreviewUrl ? '头像已选择' : '上传头像（可选）' }}</span>
-                <span class="av-sub">点击选择图片</span>
-              </div>
-            </div>
-
-            <!-- 性别 -->
-            <div class="sex-row">
-              <span class="sex-lbl">性别</span>
-              <button v-for="s in sexOptions" :key="s.value"
-                      class="sex-chip" :class="{ on: registerForm.sex === s.value }"
-                      @click.prevent="registerForm.sex = s.value">
-                {{ s.label }}
-              </button>
-            </div>
-
-            <!-- 两列：昵称 + 账号 -->
-            <div class="col2">
-              <div class="fl-wrap">
-                <input class="fl-input" id="r-nick" v-model="registerForm.nickname" placeholder=" " />
-                <label class="fl-label" for="r-nick">昵称</label>
-                <div class="fl-bar"></div>
-                <div class="fl-err"><span v-if="regErr.nickname">{{ regErr.nickname }}</span></div>
-              </div>
-              <div class="fl-wrap">
-                <input class="fl-input" id="r-acct" v-model="registerForm.account" placeholder=" " />
-                <label class="fl-label" for="r-acct">账号</label>
-                <div class="fl-bar"></div>
-                <div class="fl-err"><span v-if="regErr.account">{{ regErr.account }}</span></div>
-              </div>
-            </div>
-
-            <div class="fl-wrap">
-              <input class="fl-input" id="r-pwd" type="password"
-                     v-model="registerForm.password" placeholder=" " autocomplete="new-password" />
-              <label class="fl-label" for="r-pwd">密码</label>
-              <div class="fl-bar"></div>
-              <div class="fl-err"><span v-if="regErr.password">{{ regErr.password }}</span></div>
-            </div>
-
-            <!-- 两列：邮箱 + 验证码 -->
-            <div class="col2">
-              <div class="fl-wrap">
-                <input class="fl-input" id="r-email" v-model="registerForm.email" placeholder=" " />
-                <label class="fl-label" for="r-email">邮箱</label>
-                <div class="fl-bar"></div>
-                <div class="fl-err"><span v-if="regErr.email">{{ regErr.email }}</span></div>
-              </div>
-              <div class="fl-wrap">
-                <div class="code-line">
-                  <input class="fl-input" id="r-code" v-model="registerForm.code" placeholder=" " />
-                  <label class="fl-label" for="r-code">验证码</label>
-                  <button class="send-btn" :class="{ off: isSending }" @click.prevent="sendCode">
-                    {{ isSending ? countDown + 's' : '发送' }}
-                  </button>
+            <template v-if="$store.state.webInfo.allowRegister !== 0">
+              <input type="file" ref="avatarInput" accept="image/*"
+                     style="display:none" @change="handleFileChange" />
+              <!-- 头像 -->
+              <div class="av-row" @click="$refs.avatarInput.click()">
+                <div class="av-circle">
+                  <el-avatar :size="44" :src="avatarPreviewUrl">
+                    <span style="font-size:18px;color:#bbb">✦</span>
+                  </el-avatar>
+                  <div class="av-hover">📷</div>
                 </div>
-                <div class="fl-bar"></div>
-                <div class="fl-err"><span v-if="regErr.code">{{ regErr.code }}</span></div>
+                <div class="av-text">
+                  <span class="av-main">{{ avatarPreviewUrl ? '头像已选择' : '上传头像（可选）' }}</span>
+                  <span class="av-sub">点击选择图片</span>
+                </div>
               </div>
-            </div>
+              <!-- 性别 -->
+              <div class="sex-row">
+                <span class="sex-lbl">性别</span>
+                <button v-for="s in sexOptions" :key="s.value"
+                        class="sex-chip" :class="{ on: registerForm.sex === s.value }"
+                        @click.prevent="registerForm.sex = s.value">
+                  {{ s.label }}
+                </button>
+              </div>
+              <!-- 两列：昵称 + 账号 -->
+              <div class="col2">
+                <div class="fl-wrap">
+                  <input class="fl-input" id="r-nick" v-model="registerForm.nickname" placeholder=" " />
+                  <label class="fl-label" for="r-nick">昵称</label>
+                  <div class="fl-bar"></div>
+                  <div class="fl-err"><span v-if="regErr.nickname">{{ regErr.nickname }}</span></div>
+                </div>
+                <div class="fl-wrap">
+                  <input class="fl-input" id="r-acct" v-model="registerForm.account" placeholder=" " />
+                  <label class="fl-label" for="r-acct">账号</label>
+                  <div class="fl-bar"></div>
+                  <div class="fl-err"><span v-if="regErr.account">{{ regErr.account }}</span></div>
+                </div>
+              </div>
 
-            <button class="main-btn" :disabled="registering" @click="doRegister">
-              {{ registering ? '缔结中…' : '确认缔结' }}<span class="btn-arrow">→</span>
-            </button>
+              <div class="fl-wrap">
+                <input class="fl-input" id="r-pwd" type="password"
+                       v-model="registerForm.password" placeholder=" " autocomplete="new-password" />
+                <label class="fl-label" for="r-pwd">密码</label>
+                <div class="fl-bar"></div>
+                <div class="fl-err"><span v-if="regErr.password">{{ regErr.password }}</span></div>
+              </div>
+              <!-- 两列：邮箱 + 验证码 -->
+              <div class="col2">
+                <div class="fl-wrap">
+                  <input class="fl-input" id="r-email" v-model="registerForm.email" placeholder=" " />
+                  <label class="fl-label" for="r-email">邮箱</label>
+                  <div class="fl-bar"></div>
+                  <div class="fl-err"><span v-if="regErr.email">{{ regErr.email }}</span></div>
+                </div>
+                <div class="fl-wrap">
+                  <div class="code-line">
+                    <input class="fl-input" id="r-code" v-model="registerForm.code" placeholder=" " />
+                    <label class="fl-label" for="r-code">验证码</label>
+                    <button class="send-btn" :class="{ off: isSending }" @click.prevent="sendCode">
+                      {{ isSending ? countDown + 's' : '发送' }}
+                    </button>
+                  </div>
+                  <div class="fl-bar"></div>
+                  <div class="fl-err"><span v-if="regErr.code">{{ regErr.code }}</span></div>
+                </div>
+              </div>
 
-            <p class="switch-tip">
+              <button class="main-btn" :disabled="registering" @click="doRegister">
+                {{ registering ? '缔结中…' : '确认缔结' }}<span class="btn-arrow">→</span>
+              </button>
+            </template>
+
+            <template v-else>
+              <div class="closed-prompt">
+                <span class="closed-icon">✦</span>
+                <p>抱歉，月之别邸当前暂未开放缔结新约。</p>
+                <p>如需获取入住资格，请联系庄园主人或留意后续开放通知。</p>
+              </div>
+            </template>
+
+            <p class="switch-tip" :style="$store.state.webInfo.allowRegister === 0 ? 'margin-top: auto;' : ''">
               已有账号？
               <span class="sw-link" @click="go(false)">返回登入</span>
             </p>
@@ -153,7 +154,6 @@
 
       </div>
     </div>
-
     <!-- 裁剪弹窗 -->
     <el-dialog title="裁剪头像" :visible.sync="cropperVisible" width="800px"
                append-to-body :close-on-click-modal="false" custom-class="bili-cropper-dialog">
@@ -369,7 +369,7 @@ export default {
    card-scene 提供 perspective
    card 是翻转体，正背两面绝对叠放
    尺寸固定：宽 420px，登录面高 380px，注册面高 580px
-   ★ 关键：两面都是同一个 .card，高度取较高的（注册面 580px），
+   关键：两面都是同一个 .card，高度取较高的（注册面 580px），
      登录面内容居中即可，这样翻转前后卡片大小完全一致
 */
 .card-scene {
@@ -653,6 +653,29 @@ export default {
 .preview-item  { display: flex; flex-direction: column; align-items: center; margin-bottom: 16px; }
 .preview-circle-box { border-radius: 50%; overflow: hidden; border: 2px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
 .size-text { margin-top: 6px; font-size: 12px; color: #666; }
+
+/* ── 注册关闭提示 ── */
+.closed-prompt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  line-height: 1.8;
+  padding: 0 20px;
+}
+.closed-prompt .closed-icon {
+  font-size: 32px;
+  color: #ddd;
+  margin-bottom: 15px;
+}
+.closed-prompt p {
+  margin: 5px 0;
+  letter-spacing: 1px;
+}
 </style>
 
 <style>

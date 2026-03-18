@@ -37,7 +37,7 @@ public class LoginLogServiceImpl implements LoginLogService {
      */
     @Override
     @Async("taskExecutor")
-    public void record(HttpServletRequest request, String userId,
+    public void record(String ip, String userAgent, String userId,
                        String account, int status, String msg) {
         try {
             LoginLog loginLog = new LoginLog();
@@ -47,8 +47,7 @@ public class LoginLogServiceImpl implements LoginLogService {
             loginLog.setMsg(msg);
             loginLog.setCreateDate(System.currentTimeMillis());
 
-            // 提取 IP
-            String ip = IpUtils.getIpAddr(request);
+            // 直接使用传进来的 ip 字符串，不再使用 request
             loginLog.setIp(ip);
 
             // 查询 IP 归属地（失败时静默处理）
@@ -56,11 +55,10 @@ public class LoginLogServiceImpl implements LoginLogService {
                 loginLog.setIpLocation(IpUtils.getCityInfo(ip));
             } catch (Exception ignored) {}
 
-            // 解析 User-Agent → 浏览器 + 操作系统
+            // 直接使用传进来的 userAgent 字符串解析
             try {
-                String uaStr = request.getHeader("User-Agent");
-                if (StringUtils.isNotBlank(uaStr)) {
-                    UserAgent ua = UserAgent.parseUserAgentString(uaStr);
+                if (StringUtils.isNotBlank(userAgent)) {
+                    UserAgent ua = UserAgent.parseUserAgentString(userAgent);
                     Browser browser = ua.getBrowser();
                     OperatingSystem os = ua.getOperatingSystem();
                     loginLog.setBrowser(browser != null ? browser.getName() : null);

@@ -159,6 +159,7 @@ public class SysUserServiceImpl implements SysUserService {
 
     //
     @Override
+
     public int updateUser(UserParam userParam) {
         String id = userParam.getId();
 

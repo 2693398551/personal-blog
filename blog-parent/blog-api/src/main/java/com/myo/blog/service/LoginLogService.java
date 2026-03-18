@@ -9,7 +9,7 @@ public interface LoginLogService {
     /**
      * 异步记录登录行为（不阻塞登录主流程）
      */
-    void record(HttpServletRequest request, String userId,
+    void record(String ip, String userAgent, String userId,
                 String account, int status, String msg);
 
     /**

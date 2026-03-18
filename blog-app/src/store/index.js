@@ -2,11 +2,12 @@ import Vuex from 'vuex'
 import Vue from 'vue'
 import {getToken, setToken, removeToken} from '@/request/token'
 import {login, getUserInfo, logout, register} from '@/api/login'
-
+import { getWebInfo } from '@/api/webInfo'
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
+    webInfo: {},
     id: '',
     account: '',
     name: '',
@@ -30,6 +31,9 @@ export default new Vuex.Store({
     }
   },
   mutations: {
+    SET_WEB_INFO: (state, webInfo) => {
+      state.webInfo = webInfo
+    },
     SET_TOKEN: (state, token) => {
       state.token = token
     },
@@ -97,6 +101,22 @@ export default new Vuex.Store({
     }
   },
   actions: {
+    // 获取网站信息
+    getWebInfo({commit}) {
+      return new Promise((resolve, reject) => {
+        getWebInfo().then(data => {
+          if (data.success) {
+            commit('SET_WEB_INFO', data.data)
+            resolve(data)
+          } else {
+            reject(data.msg)
+          }
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+
     login({commit, dispatch}, user) {
       return new Promise((resolve, reject) => {
         login(user.account, user.password).then(data => {

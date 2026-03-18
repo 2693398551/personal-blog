@@ -32,6 +32,16 @@ service.interceptors.response.use(
 
     // 0 为成功状态
     if (res.code !== 200) {
+      if (res.code === 10003) {
+        myMessage.warning('登录状态已失效，请重新登录')
+        // 触发Vuex中的前端登出，清理本地Token
+        store.dispatch('fedLogOut')
+        // 延迟1秒刷新当前页面，应用会重新走路由守卫，变成未登录的游客状态
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
+        return Promise.reject('error');
+      }
       // 90001 Session超时
       if (res.code === 90001) {
         return Promise.reject('error');
@@ -58,8 +68,8 @@ service.interceptors.response.use(
     }
   },
   error => {
-    // 网络错误或连接超时
-    myMessage.error('连接超时或网络异常')
+    // 网络错误
+    myMessage.error('网络异常')
     return Promise.reject('error')
   }
 )

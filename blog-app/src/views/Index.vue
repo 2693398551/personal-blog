@@ -36,7 +36,6 @@
 
 
   import {getArticles, getHotArtices, getNewArtices} from '@/api/article'
-  import {getWebinfo} from '@/api/utils'
   import {getHotTags} from '@/api/tag'
   import {listarticles} from '@/api/article'
 
