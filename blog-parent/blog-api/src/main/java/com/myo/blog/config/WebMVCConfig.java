@@ -3,7 +3,6 @@ package com.myo.blog.config;
 import com.myo.blog.handler.AdminInterceptor;
 import com.myo.blog.handler.IpBlackListInterceptor;
 import com.myo.blog.handler.AuthInterceptor;
-import com.myo.blog.handler.VisitLogInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -32,7 +31,6 @@ public class WebMVCConfig implements WebMvcConfigurer {
 
     private final AdminInterceptor adminInterceptor;// 管理员权限拦截器
 
-     private final VisitLogInterceptor visitLogInterceptor; // 流量拦截器
 
     /**
      * 跨域资源共享（CORS）配置
@@ -66,14 +64,6 @@ public class WebMVCConfig implements WebMvcConfigurer {
         // 第一道防线：IP 黑名单无差别拦截
         registry.addInterceptor(ipBlackListInterceptor)
                 .addPathPatterns("/**");// 对所有路径应用 IP 黑名单拦截
-
-        // 流量采集防线：记录真实访客流量（放在黑名单之后，这样恶意IP就不会污染大屏数据）
-        registry.addInterceptor(visitLogInterceptor)
-                .addPathPatterns("/articles", "/articles/**") // 拦截文章列表及详情的访问
-                .addPathPatterns("/categorys", "/categorys/**") // 拦截分类数据的访问
-                .addPathPatterns("/tags", "/tags/**") // 拦截标签数据的访问
-                .addPathPatterns("/comments/article/**") // 拦截评论数据的读取
-                .excludePathPatterns("/admin/**"); // 重点：排除后台管理端，防止管理员后台操作时产生虚假流量
 
         // 第二道防线：登录鉴权与上下文挂载
         // 前台接口拦截器：校验登录状态，挂载用户上下文

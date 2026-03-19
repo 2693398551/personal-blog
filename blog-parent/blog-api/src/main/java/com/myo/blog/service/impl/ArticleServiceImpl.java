@@ -10,7 +10,6 @@ import com.myo.blog.dao.mapper.*;
 import com.myo.blog.dao.pojo.*;
 import com.myo.blog.entity.*;
 import com.myo.blog.service.*;
-import com.myo.blog.entity.params.ArticleBodyParam;
 import com.myo.blog.entity.params.ArticleParam;
 import com.myo.blog.entity.params.PageParams;
 import com.myo.blog.utils.ArticleUtils;
