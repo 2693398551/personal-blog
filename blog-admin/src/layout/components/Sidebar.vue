@@ -109,7 +109,27 @@
       </el-sub-menu>
     </el-sub-menu>
 
-      <el-menu-item index="/system/task">
+    <el-sub-menu index="visit">
+      <template #title>
+        <el-icon><DataLine /></el-icon>
+        <span>访客统计</span>
+      </template>
+      <el-menu-item index="/visit/stats">
+        <el-icon><TrendCharts /></el-icon>
+        <span>统计概览</span>
+      </el-menu-item>
+      <el-menu-item index="/visit/visitor">
+        <el-icon><User /></el-icon>
+        <span>访客管理</span>
+      </el-menu-item>
+      <el-menu-item index="/visit/map">
+        <el-icon><MapLocation /></el-icon>
+        <span>访客地图</span>
+      </el-menu-item>
+    </el-sub-menu>
+
+
+    <el-menu-item index="/system/task">
         <el-icon><Timer /></el-icon>
         <span>任務管理</span>
       </el-menu-item>
@@ -124,7 +144,7 @@ import {
   Odometer, Document, Edit, List, Folder,
   Operation, ChatDotRound, Link,
   User, UserFilled,
-  Setting, Warning, DataLine, Picture, Refresh, Timer,Tickets
+  Setting, Warning, DataLine, Picture, Refresh, Timer,Tickets,TrendCharts,MapLocation
 } from '@element-plus/icons-vue'
 
 const route = useRoute()

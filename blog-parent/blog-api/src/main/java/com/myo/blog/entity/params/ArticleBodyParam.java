@@ -1,7 +1,7 @@
 package com.myo.blog.entity.params;
 
 import lombok.Data;
-
+// 文章内容参数
 @Data
 public class ArticleBodyParam {
 

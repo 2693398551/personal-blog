@@ -95,6 +95,22 @@ const routes: Array<RouteRecordRaw> = [
                 component: () => import('../views/ai/chat.vue'),
                 meta: { title: '智能助手' }
             },
+            {
+                path: 'visit/stats',
+                component: () => import('../views/visit/visitStats.vue'),
+                meta: { title: '访客统计' }
+            },
+            {
+                path: 'visit/visitor',
+                component: () => import('../views/visit/visitor.vue'),
+                meta: { title: '访客管理' }
+            },
+            {
+                path: 'visit/map',
+                component: () => import('../views/visit/visitMap.vue'),
+                meta: { title: '访客地图' }
+            },
+
         ]
     }
 ]

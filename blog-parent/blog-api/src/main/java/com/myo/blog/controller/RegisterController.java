@@ -1,15 +1,16 @@
 package com.myo.blog.controller;
 
 import com.myo.blog.common.aop.RateLimit;
+import com.myo.blog.dao.pojo.WebInformation;
 import com.myo.blog.service.LoginService;
 import com.myo.blog.entity.Result;
 import com.myo.blog.entity.params.LoginParam;
+import com.myo.blog.service.WebInformationService;
 import com.myo.blog.utils.IpUtils;
 import com.myo.blog.utils.HttpContextUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,11 +26,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class RegisterController {
 
     private final LoginService loginService;
-
+    private final WebInformationService webInformationService;
     // 1分钟1次，防止邮件轰炸
     @RateLimit(time = 60, count = 1, msg = "验证码发送太频繁，请稍后再试")
     @PostMapping("sendCode")
     public Result sendCode(@RequestBody LoginParam loginParam) {
+        // 校验是否开放注册
+        checkRegisterPermission();
+
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
         String ip = IpUtils.getIpAddr(request);
         String email = loginParam.getEmail();
@@ -57,6 +61,9 @@ public class RegisterController {
     @RateLimit(time = 60, count = 5, msg = "注册太频繁")
     @PostMapping
     public Result register(@RequestBody LoginParam loginParam){
+        // 校验是否开放注册
+        checkRegisterPermission();
+
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
         String ip = IpUtils.getIpAddr(request);
         String account = loginParam.getAccount();
@@ -79,6 +86,17 @@ public class RegisterController {
             log.error("注册异常 - IP: {}, 账号: {}, 邮箱: {}, 异常信息: {}",
                     ip, account, email, e.getMessage(), e);
             return Result.fail(500, "系统异常，请稍后重试");
+        }
+
+
+
+    }
+    // 校验是否开放注册
+    private void checkRegisterPermission() {
+        Result webInfoResult = webInformationService.getWebInfo();
+        WebInformation webInfo = (WebInformation) webInfoResult.getData();
+        if (webInfo == null || webInfo.getAllowRegister() == 0) {
+            throw new RuntimeException("注册功能已关闭，暂不开放");
         }
     }
 }

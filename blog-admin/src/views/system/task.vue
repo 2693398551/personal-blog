@@ -148,6 +148,35 @@ const paramHints: Record<string, string> = {
 
 // 手动执行一次：包含前端预校验与异步预期管理
 const handleRunOnce = (row: any) => {
+
+  // need_param 为 0，直接执行不弹输入框
+  if (row.needParam === 0) {
+    ElMessageBox.confirm(
+        `<div style="font-size: 13px; color: #606266; padding: 10px; background: #f4f4f5; border-radius: 4px;">
+        【任务说明】：${row.remark || '暂无说明'}
+      </div>`,
+        `确认执行：${row.taskName}`,
+        {
+          dangerouslyUseHTMLString: true,
+          confirmButtonText: '立即执行',
+          cancelButtonText: '取消',
+        }
+    ).then(async () => {
+      try {
+        const res: any = await runTaskOnce({ id: row.id, taskParam: '' })
+        if (res.data.success) {
+          ElMessage.success(`任务 [${row.taskName}] 已成功下发！请稍后点击【调度日志】查看结果。`)
+        } else {
+          ElMessage.error(res.data.msg || '下发失败')
+        }
+      } catch (e: any) {
+        ElMessage.error(e.message || '系统异常')
+      }
+    }).catch(() => ElMessage.info('已取消执行'))
+    return
+  }
+
+  // need_param 为 1，显示带输入框的弹窗
   const specificHint = paramHints[row.beanName] || '如果该任务支持传参，请按照后端设定的格式输入。'
 
   const promptHtml = `

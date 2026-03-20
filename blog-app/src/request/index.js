@@ -14,6 +14,11 @@ service.interceptors.request.use(config => {
   if (store.state.token) {
     config.headers['Authorization'] = getToken()
   }
+  // 访客 UUID
+  const uuid = localStorage.getItem('visitor_uuid')
+  if (uuid) {
+    config.headers['Visitor-UUID'] = uuid
+  }
   return config
 }, error => {
   Promise.reject(error)
@@ -22,7 +27,11 @@ service.interceptors.request.use(config => {
 // response拦截器
 service.interceptors.response.use(
   response => {
-
+    //如果后端返回了新 UUID，存到 localStorage
+    const newUuid = response.headers['set-visitor-uuid']
+    if (newUuid) {
+      localStorage.setItem('visitor_uuid', newUuid)
+    }
     // 全局统一处理 Session超时
     if (response.headers['session_time_out'] == 'timeout') {
       store.dispatch('fedLogOut')

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myo.blog.dao.mapper.VisitLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.myo.blog.dao.pojo.VisitLog">
+        <id     column="id"           property="id"/>
+        <result column="visitor_uuid" property="visitorUuid"/>
+        <result column="user_id"      property="userId"/>
+        <result column="behavior"     property="behavior"/>
+        <result column="content"      property="content"/>
+        <result column="uri"          property="uri"/>
+        <result column="method"       property="method"/>
+        <result column="ip"           property="ip"/>
+        <result column="ip_location"  property="ipLocation"/>
+        <result column="province"     property="province"/>
+        <result column="city"         property="city"/>
+        <result column="os"           property="os"/>
+        <result column="browser"      property="browser"/>
+        <result column="referer"      property="referer"/>
+        <result column="create_date"  property="createDate"/>
+    </resultMap>
+
+    <!-- ============================================================
+         统计指定日期的 PV
+    ============================================================ -->
+    <select id="countPvByDate" resultType="long">
+        SELECT COUNT(*)
+        FROM myo_visit_log
+        WHERE DATE(FROM_UNIXTIME(create_date / 1000)) = #{date}
+    </select>
+
+    <!-- ============================================================
+         统计指定日期的 UV（uuid 去重）
+    ============================================================ -->
+    <select id="countUvByDate" resultType="long">
+        SELECT COUNT(DISTINCT visitor_uuid)
+        FROM myo_visit_log
+        WHERE DATE(FROM_UNIXTIME(create_date / 1000)) = #{date}
+    </select>
+
+    <!-- ============================================================
+         统计指定日期的新增访客数
+         逻辑：该 uuid 在 visit_log 中最早出现的日期 = #{date}
+    ============================================================ -->
+    <select id="countNewVisitorByDate" resultType="long">
+        SELECT COUNT(*)
+        FROM (
+            SELECT visitor_uuid,
+                   MIN(DATE(FROM_UNIXTIME(create_date / 1000))) AS first_day
+            FROM myo_visit_log
+            GROUP BY visitor_uuid
+        ) t
+        WHERE t.first_day = #{date}
+    </select>
+
+    <!-- ============================================================
+         查询某访客的行为明细（后台"查看记录"）
+    ============================================================ -->
+    <select id="pageByVisitorUuid" resultMap="BaseResultMap">
+        SELECT *
+        FROM myo_visit_log
+        WHERE visitor_uuid = #{visitorUuid}
+        ORDER BY create_date DESC
+    </select>
+
+    <!-- ============================================================
+         归档：查询指定月份的全量数据
+         yearMonth 格式：yyyy-MM，如 2025-02
+    ============================================================ -->
+    <select id="listByMonth" resultMap="BaseResultMap">
+        SELECT *
+        FROM myo_visit_log
+        WHERE DATE_FORMAT(FROM_UNIXTIME(create_date / 1000), '%Y-%m') = #{yearMonth}
+        ORDER BY create_date ASC
+    </select>
+
+    <!-- ============================================================
+         归档后删除指定月份数据
+    ============================================================ -->
+    <delete id="deleteByMonth">
+        DELETE FROM myo_visit_log
+        WHERE DATE_FORMAT(FROM_UNIXTIME(create_date / 1000), '%Y-%m') = #{yearMonth}
+    </delete>
+
+</mapper>

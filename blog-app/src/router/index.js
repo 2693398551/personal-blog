@@ -4,6 +4,7 @@ import Home from '@/Home'
 import {Message} from 'element-ui';
 import store from '@/store'
 import {getToken} from '@/request/token'
+import request from '@/request'
 
 Vue.use(Router)
 
@@ -151,6 +152,28 @@ router.beforeEach((to, from, next) => {
       next();
     }
   }
+})
+
+//路由跳转后上报页面访问
+router.afterEach((to, from) => {
+  // 排除不需要统计的页面
+  const excludePaths = ['/login', '/register', '/write']
+  if (excludePaths.some(p => to.path.startsWith(p))) return
+
+  const uuid = localStorage.getItem('visitor_uuid')
+  const headers = uuid ? { 'Visitor-UUID': uuid } : {}
+
+  request({
+    url: '/visit/record',
+    method: 'post',
+    data: { uri: to.path },
+    headers
+  }).then(res => {
+    // 后端首次返回新 UUID，存起来
+    if (res && res.newUuid) {
+      localStorage.setItem('visitor_uuid', res.newUuid)
+    }
+  }).catch(() => {})  // 统计失败静默处理，不影响用户
 })
 
 

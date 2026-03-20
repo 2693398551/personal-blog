@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myo.blog.dao.mapper.VisitorMapper">
+
+    <!-- ============================================================
+         通用 ResultMap
+    ============================================================ -->
+    <resultMap id="BaseResultMap" type="com.myo.blog.dao.pojo.Visitor">
+        <id     column="id"          property="id"/>
+        <result column="uuid"        property="uuid"/>
+        <result column="user_id"     property="userId"/>
+        <result column="ip"          property="ip"/>
+        <result column="ip_location" property="ipLocation"/>
+        <result column="province"    property="province"/>
+        <result column="city"        property="city"/>
+        <result column="os"          property="os"/>
+        <result column="browser"     property="browser"/>
+        <result column="pv"          property="pv"/>
+        <result column="first_visit" property="firstVisit"/>
+        <result column="last_visit"  property="lastVisit"/>
+        <result column="create_date" property="createDate"/>
+        <result column="user_nickname" property="userNickname"/>
+        <result column="user_avatar"   property="userAvatar"/>
+    </resultMap>
+
+    <!-- ============================================================
+         UPSERT：uuid 存在则更新，不存在则插入
+         ON DUPLICATE KEY 触发 uk_uuid 唯一索引
+    ============================================================ -->
+    <insert id="upsert" parameterType="com.myo.blog.dao.pojo.Visitor">
+        INSERT INTO myo_visitor
+            (uuid, user_id, ip, ip_location, province, city, os, browser,
+             pv, first_visit, last_visit, create_date)
+        VALUES
+            (#{uuid}, #{userId}, #{ip}, #{ipLocation}, #{province}, #{city},
+             #{os}, #{browser}, 1, #{firstVisit}, #{lastVisit}, #{createDate})
+        ON DUPLICATE KEY UPDATE
+            pv          = pv + 1,
+            last_visit  = VALUES(last_visit),
+            /* 登录后补绑定 user_id */
+            user_id     = COALESCE(VALUES(user_id), user_id),
+            /* IP / 设备信息随最新请求更新 */
+            ip          = VALUES(ip),
+            ip_location = VALUES(ip_location),
+            province    = VALUES(province),
+            city        = VALUES(city),
+            os          = VALUES(os),
+            browser     = VALUES(browser)
+    </insert>
+
+    <!-- ============================================================
+         按城市聚合 UV，用于前台地图打点
+    ============================================================ -->
+    <select id="countUvByCity" resultType="java.util.Map">
+        SELECT
+            city,
+            COUNT(DISTINCT uuid) AS uv
+        FROM myo_visitor
+        WHERE city IS NOT NULL
+          AND city != ''
+        GROUP BY city
+        ORDER BY uv DESC
+    </select>
+
+    <!-- ============================================================
+         后台访客列表分页
+         keyword 可模糊匹配 uuid / ip / city / browser / os
+    ============================================================ -->
+    <select id="pageVisitors" resultMap="BaseResultMap">
+        SELECT
+        v.*,
+        u.nickname AS user_nickname,
+        u.avatar   AS user_avatar
+        FROM myo_visitor v
+        LEFT JOIN myo_sys_user u ON u.id COLLATE utf8mb4_general_ci = v.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (v.uuid     LIKE CONCAT('%', #{keyword}, '%')
+                OR v.ip      LIKE CONCAT('%', #{keyword}, '%')
+                OR v.city    LIKE CONCAT('%', #{keyword}, '%')
+                OR v.os      LIKE CONCAT('%', #{keyword}, '%')
+                OR v.browser LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY v.last_visit DESC
+    </select>
+
+</mapper>

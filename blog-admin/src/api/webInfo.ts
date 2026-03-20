@@ -3,7 +3,7 @@ import request from '../utils/request'
 // 获取网站全局配置信息
 export function getWebInfo() {
     return request({
-        url: '/webInfo',
+        url: '/admin/webInfo',
         method: 'get'
     })
 }
@@ -11,7 +11,7 @@ export function getWebInfo() {
 // 更新网站全局配置信息
 export function updateWebInfo(data: any) {
     return request({
-        url: '/webInfo/update',
+        url: '/admin/webInfo/update',
         method: 'post',
         data
     })

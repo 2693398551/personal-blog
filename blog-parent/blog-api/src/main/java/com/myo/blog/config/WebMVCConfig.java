@@ -3,6 +3,7 @@ package com.myo.blog.config;
 import com.myo.blog.handler.AdminInterceptor;
 import com.myo.blog.handler.IpBlackListInterceptor;
 import com.myo.blog.handler.AuthInterceptor;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -30,6 +31,7 @@ public class WebMVCConfig implements WebMvcConfigurer {
     private final IpBlackListInterceptor ipBlackListInterceptor;// IP 黑名单拦截器
 
     private final AdminInterceptor adminInterceptor;// 管理员权限拦截器
+
 
 
     /**
@@ -60,6 +62,11 @@ public class WebMVCConfig implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        //请求进来
+        //  → ① IpBlackListInterceptor  黑名单过滤
+        //  → ② AuthInterceptor         写入 UserThreadLocal
+        //  → ③ AdminInterceptor        校验管理员权限
+
 
         // 第一道防线：IP 黑名单无差别拦截
         registry.addInterceptor(ipBlackListInterceptor)
@@ -96,5 +103,9 @@ public class WebMVCConfig implements WebMvcConfigurer {
         // 依赖 AuthInterceptor 提前写入的 UserContext
         registry.addInterceptor(adminInterceptor)
                 .addPathPatterns("/admin/**");
+
+
+
     }
+
 }

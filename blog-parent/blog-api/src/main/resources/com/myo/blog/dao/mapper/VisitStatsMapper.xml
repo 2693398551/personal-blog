@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myo.blog.dao.mapper.VisitStatsMapper">
+
+    <resultMap id="BaseResultMap" type="com.myo.blog.dao.pojo.VisitStats">
+        <id     column="id"          property="id"/>
+        <result column="date"        property="date"/>
+        <result column="pv"          property="pv"/>
+        <result column="uv"          property="uv"/>
+        <result column="new_visitor" property="newVisitor"/>
+        <result column="create_date" property="createDate"/>
+    </resultMap>
+
+    <!-- ============================================================
+         UPSERT：date 唯一索引，重跑幂等
+    ============================================================ -->
+    <insert id="upsertStats" parameterType="com.myo.blog.dao.pojo.VisitStats">
+        INSERT INTO myo_visit_stats (date, pv, uv, new_visitor, create_date)
+        VALUES (#{date}, #{pv}, #{uv}, #{newVisitor}, #{createDate})
+        ON DUPLICATE KEY UPDATE
+            pv          = VALUES(pv),
+            uv          = VALUES(uv),
+            new_visitor = VALUES(new_visitor),
+            create_date = VALUES(create_date)
+    </insert>
+
+    <!-- ============================================================
+         最近 N 天数据，后台仪表盘折线图
+    ============================================================ -->
+    <select id="listRecentDays" resultMap="BaseResultMap">
+        SELECT *
+        FROM myo_visit_stats
+        ORDER BY date DESC
+        LIMIT #{days}
+    </select>
+
+    <!-- ============================================================
+         指定日期范围
+    ============================================================ -->
+    <select id="listByDateRange" resultMap="BaseResultMap">
+        SELECT *
+        FROM myo_visit_stats
+        WHERE date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY date ASC
+    </select>
+
+    <!-- ============================================================
+         全站累计 PV/UV 总量，前台底部展示
+    ============================================================ -->
+    <select id="sumTotal" resultMap="BaseResultMap">
+        SELECT
+            NULL       AS id,
+            NULL       AS date,
+            SUM(pv)    AS pv,
+            SUM(uv)    AS uv,
+            SUM(new_visitor) AS new_visitor,
+            NULL       AS create_date
+        FROM myo_visit_stats
+    </select>
+
+</mapper>
