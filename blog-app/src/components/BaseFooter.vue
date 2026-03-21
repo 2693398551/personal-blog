@@ -12,6 +12,8 @@
           <span class="author-name" @click="resume">Master</span>
         </span>
       </div>
+      <!-- 访客统计，受后台开关控制 -->
+      <visitor-count></visitor-count>
 
       <div class="legal-info">
         <a href="https://beian.miit.gov.cn/" target="_blank" class="icp-link">
@@ -24,8 +26,13 @@
 </template>
 
 <script>
+import VisitorCount from '@/components/common/VisitorCount'
+
 export default {
   name: 'BaseFooter',
+  components: {
+    VisitorCount
+  },
   data() {
     return {}
   },

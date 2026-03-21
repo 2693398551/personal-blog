@@ -66,7 +66,7 @@ const initMap = async () => {
   // 动态加载中国地图 GeoJSON
   let geoJson: any
   try {
-    const resp = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
+    const resp = await fetch('/china.json')
     geoJson = await resp.json()
   } catch (e) {
     console.error('地图数据加载失败', e)
