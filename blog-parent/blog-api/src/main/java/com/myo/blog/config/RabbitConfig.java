@@ -51,8 +51,8 @@ public class RabbitConfig {
 
     //===网站配置队列配置===
     @Bean
-    public DirectExchange webInfoExchange() {
-        return new DirectExchange(WEB_INFO_EXCHANGE, true, false);
+    public TopicExchange webInfoExchange() {
+        return new TopicExchange(WEB_INFO_EXCHANGE, true, false);
     }
 
     @Bean
