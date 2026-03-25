@@ -133,6 +133,10 @@
         <el-icon><Timer /></el-icon>
         <span>任務管理</span>
       </el-menu-item>
+    <el-menu-item index="/test/word-stamp">
+        <el-icon><Document /></el-icon>
+        <span>盖章测试</span>
+      </el-menu-item>
 
   </el-menu>
 </template>

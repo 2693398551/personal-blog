@@ -110,6 +110,12 @@ const routes: Array<RouteRecordRaw> = [
                 component: () => import('../views/visit/visitMap.vue'),
                 meta: { title: '访客地图' }
             },
+            {
+                path: '/test/word-stamp',
+                name: 'WordStamp',
+                component: () => import('../views/test/WordStamp.vue'),
+                meta: { title: '盖章测试', icon: 'Document' }
+            }
 
         ]
     }
